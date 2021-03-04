@@ -17,11 +17,12 @@
 --- casting-net/new-calculations
 
 #DONE
-+++ casting-net/*
++++ casting-net/[3]
 +++ tourism/atarskaya-luka/*
 +++ tourism/shaitan/*
 +++ tourism/zhukovlyansky-valuni/*
 +++ fun/attention-gun/*
++++ fun/frozen-boiled-water/*
 +++ knots/reef-knot/*
 +++ knots/turk-head/*
 
