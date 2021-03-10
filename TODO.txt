@@ -1,43 +1,46 @@
 #IN WORK
---- tourism/kazanskoye-sea/*
+--- tourism/kazanskoye-sea
 
---- fun/magic-chain/*
---- fun/whip-impulse/*
+--- fun/magic-chain
+--- fun/whip-impulse
 
---- knots/whips/*
---- knots/polispast/*
+--- knots/whips
+--- knots/polispast
 
---- games/
+--- games/?
 
 --- stihomix/broken-plate
---- stihomix/sex?
+--- stihomix/sex
 
 --- guitar/*
 
 --- casting-net/new-calculations
 
 #DONE
-+++ casting-net/[3]
-+++ tourism/atarskaya-luka/*
-+++ tourism/shaitan/*
-+++ tourism/zhukovlyansky-valuni/*
-+++ fun/attention-gun/*
-+++ fun/frozen-boiled-water/*
-+++ knots/reef-knot/*
-+++ knots/turk-head/*
++++ casting-net/intro
++++ casting-net/calc
++++ casting-net/knots
++++ casting-net/finishing
++++ tourism/atarskaya-luka
++++ tourism/shaitan
++++ tourism/zhukovlyansky-valuni
++++ fun/attention-gun
++++ fun/frozen-boiled-water
++++ knots/reef-knot
++++ knots/turk-head
 
 #MAY BE
 --- амфорный узел
 --- схватывающие узлы
 --- фокусы на узлах
 --- лекции по информатике, программированию, защите информации
---- подвижные и настольные игры (из академии ведуших)
+--- подвижные и настольные игры (из академии ведуших???)
 --- почему лады на грифе разной ширины?
 --- как увидеть звук
 --- деление по америкосски
 --- волшебная цепочка
 --- иглу
---- кофе в гейзере
+--- кофе в гейзере (совместить с пролазом на березу???)
 --- поделка кнута
 --- закон сохранения импульса на примере кнута
 --- кастинг, как пользоваться прикидочным расчетом
