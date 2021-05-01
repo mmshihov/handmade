@@ -1,0 +1,176 @@
+%include common packages and settings
+\input{./common}
+
+\title[Вяжем полотно кастинговой сети <<клиньями>>]{Полотно кастинговой сети}
+
+\begin{document}
+
+\mode<article>{\maketitle\tableofcontents}
+\frame<presentation>{\titlepage}
+\begin{frame}<presentation>
+    \frametitle{Содержание}
+    \tableofcontents
+\end{frame}
+
+\begin{frame}
+    \frametitle{Что делаем?}
+
+	\begin{itemize}
+		\item Разберемся в общих принципах вязания круглого сетевого полотна.
+		\item Поймем через сколько обычных рядов нужно вязать ряд с добавками и сколько в этом ряду этих самых добавок должно быть. 
+		\item Свяжем несколько маленьких полотен в качестве примера и посмотрим, что получается.
+		\item Выведем основные формулы.
+	\end{itemize}
+\end{frame}
+
+
+\section{Как вязать круглое сетевое полотно?}
+
+\begin{frame}
+    \frametitle{Ячейка сети --- штука подвижная}
+    \framesubtitle{Вытягиваясь по ширине, она уменьшается по высоте (и наоборот)}
+
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{figs/cells-simple}
+    \end{center}
+\end{frame}
+
+
+\subsection{Вяжем одним циллиндром без добавок}
+
+\begin{frame}
+    \frametitle{Если связать всё полотно одинм циллиндром}
+    \framesubtitle{При этом верхнюю часть просто <<стянуть>> к горловине}
+
+    \begin{center}
+        \includegraphics[width=0.95\textwidth]{figs/by-one-cylinder}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{В <<стянутом>> циллиндре}
+    \framesubtitle{Ячейки по краям полотна будут раскрыты, а у центра --- практически закрыты}
+
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{figs/cells-in-cylinder-mesh}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Достоинства и недостатки}
+	
+	Достоинства:
+    \begin{itemize}
+        \item Не надо уметь вязать добавки.
+    \end{itemize}
+	
+	Недостатки:
+    \begin{itemize}
+        \item Жуткая <<мотня>> из ячей в центре будет мешать забросу.
+    \end{itemize}
+	
+	Надо подумать:
+    \begin{itemize}
+        \item Ячейки, <<закрытые>> в центре --- это достоинство или недостаток?
+		\begin{itemize}
+			\item Центр сети массивнее в полете.
+			\item Центр сети оказывает большее сопротивление воде, когда сеть тонет (парашют лучше?).
+		\end{itemize}		
+    \end{itemize}
+\end{frame}
+
+
+\subsection{Вяжем <<Клиньями>>}
+
+\begin{frame}
+    \frametitle{Если взять циллиндр и вырезать лишнее}
+    \framesubtitle{Получатся клинья, в которых ячейки раскрыты равномерно}
+
+    \begin{center}
+        \includegraphics[width=0.43\textwidth]{figs/wedges}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Сложив <<клинья>> на плоскость,}
+    \framesubtitle{получим полотно с равномерным раскрытием ячеек}
+
+    \begin{center}
+        \includegraphics[width=0.43\textwidth]{figs/wedges-mesh-cells}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Выводы}
+
+	Когда полотно вяжется <<клиньями>>:
+    \begin{itemize}
+        \item Работы в два раза меньше, чем связать полотно одним циллиндром.
+        \item Ячейки в полете получаются равномерно раскрытыми.
+		\item Клин легко формируется добавлеинем ячеи на ребре.
+        \item Как будет видно, схема вязания клиньями по кругу очень простая и регулярная. Ошибиться тут сложно.
+    \end{itemize}
+\end{frame}
+
+
+\subsection{Вяжем полотно из нескольких циллиндров}
+
+\begin{frame}
+    \frametitle{Вяжем несколькими циллиндрами}
+    \framesubtitle{Чем меньше высота составляющих циллиндров, тем равномернее раскрытие ячей}
+
+    \begin{center}
+        \includegraphics[width=0.43\textwidth]{figs/by-many-cylinders}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Полусфера несколькими циллиндрами}
+
+    \begin{center}
+        \includegraphics[width=0.35\textwidth]{figs/half-sphere}
+    \end{center}
+\end{frame}
+
+
+\section{Как правильно делать добавки?}
+
+\begin{frame}
+    \frametitle{Как вязать добавку?}
+
+%TODO    \begin{center}
+%            \includegraphics[width=0.35\textwidth]{figs/addition-how-to}
+%        \end{center}
+\end{frame}
+
+
+\subsection{Схемы вывязывания <<клина>>}
+
+\begin{frame}
+    \frametitle{Чтобы вязать <<клиньями>>}
+
+	надо определить:
+    \begin{center}
+        \item через сколько обычных рядов (провязаных циллиндром) нужно вязать ряд с добавками?
+		\item сколько в ряду c добавками этих самых добавок должно быть?
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Чтобы вязать <<клиньями>>}
+
+	надо определить:
+    \begin{center}
+        \item через сколько обычных рядов (провязаных циллиндром) нужно вязать ряд с добавками?
+		\item сколько в ряду c добавками этих самых добавок должно быть?
+    \end{center}
+\end{frame}
+
+
+%\subsection{Сколько добавок делать на ряд?}
+%\subsection{Что получается на практике?}
+%
+%\section{Сколько труда придется вложить?}
+
+
+\end{document}
