@@ -17,7 +17,7 @@
 
 	\begin{itemize}
 		\item Разберемся в общих принципах вязания круглого сетевого полотна.
-		\item Поймем через сколько обычных рядов нужно вязать ряд с добавками и сколько в этом ряду этих самых добавок должно быть. 
+		\item Когда вяжем <<клиньями>>: поймем через сколько обычных рядов нужно вязать ряд с добавками и сколько в этом ряду этих самых добавок должно быть. 
 		\item Свяжем несколько маленьких полотен в качестве примера и посмотрим, что получается.
 		\item Выведем основные формулы.
 	\end{itemize}
@@ -35,11 +35,19 @@
     \end{center}
 \end{frame}
 
+\begin{frame}
+    \frametitle{Как ведет себя сетевое полотно}
+
+    \begin{center}
+        \includegraphics[width=0.6\textwidth]{figs/net-mesh-state}
+    \end{center}
+\end{frame}
+
 
 \subsection{Вяжем одним циллиндром без добавок}
 
 \begin{frame}
-    \frametitle{Если связать всё полотно одинм циллиндром}
+    \frametitle{Если связать всё полотно одним циллиндром}
     \framesubtitle{При этом верхнюю часть просто <<стянуть>> к горловине}
 
     \begin{center}
@@ -96,7 +104,7 @@
     \framesubtitle{получим полотно с равномерным раскрытием ячеек}
 
     \begin{center}
-        \includegraphics[width=0.43\textwidth]{figs/wedges-mesh-cells}
+        \includegraphics[width=0.6\textwidth]{figs/wedges-mesh-cells}
     \end{center}
 \end{frame}
 
@@ -107,8 +115,11 @@
     \begin{itemize}
         \item Работы в два раза меньше, чем связать полотно одним циллиндром.
         \item Ячейки в полёте получаются равномерно раскрытыми.
-		\item Клин легко формируется добавлеинем ячеи на ребре.
-        \item Как будет видно, схема вязания клиньями по кругу очень простая и регулярная. Ошибиться тут сложно.
+		\item Клин легко формируется добавлением ячеи на ребре.
+        \item Как будет видно, схема вязания клиньями по кругу очень простая и регулярная. 
+		\begin{itemize}
+			\item Ошибиться тут сложно, и не надо ничего считать: где вязать очередную добавку --- видно по рисунку сетевого полотна.
+		\end{itemize}
     \end{itemize}
 \end{frame}
 
@@ -121,6 +132,14 @@
 
     \begin{center}
         \includegraphics[width=0.43\textwidth]{figs/by-many-cylinders}
+    \end{center}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Вязание <<клиньями>> --- частный случай}
+
+    \begin{center}
+        \includegraphics[width=0.7\textwidth]{figs/cнlinder-additions}
     \end{center}
 \end{frame}
 
@@ -270,6 +289,72 @@
 \end{frame}
 
 \begin{frame}
+    \frametitle{Чтобы самому не считать ($M=2$)}
+
+	\begin{center}	
+		\begin{tabular}{c|c|l}
+			\hline\hline
+			$M$ & $N$ &Подвязка --- умножить ширину ячейки($c$) на: \\ 
+			\hline\hline
+			2 & 7	& $c$ * 1.336 \\
+			2 & 8	& $c$ * 1.235 \\
+			2 & 9	& $c$ * 1.145 \\
+			2 & 10	& $c$ * 1.064 \\
+			2 & 11	& $c$ * 0.992 \\
+			2 & 12	& $c$ * 0.928 \\
+			2 & 13	& $c$ * 0.870 \\
+			2 & 14	& $c$ * 0.819 \\
+			2 & 15	& $c$ * 0.773 \\
+			\hline		
+		\end{tabular}
+	\end{center}	
+\end{frame}
+
+\begin{frame}
+    \frametitle{Чтобы самому не считать ($M=3$)}
+	
+	\begin{center}	
+		\begin{tabular}{c|c|l}
+			\hline\hline
+			$M$ & $N$ &Подвязка --- умножить ширину ячейки($c$) на: \\ 
+			\hline\hline
+			3 & 10 & $c$ * 1.372 \\
+			3 & 11 & $c$ * 1.301 \\
+			3 & 12 & $c$ * 1.235 \\
+			3 & 13 & $c$ * 1.174 \\
+			3 & 14 & $c$ * 1.117 \\
+			3 & 15 & $c$ * 1.064 \\
+			3 & 16 & $c$ * 1.015 \\
+			3 & 17 & $c$ * 0.970 \\
+			3 & 18 & $c$ * 0.928 \\
+		\hline		
+		\end{tabular}
+	\end{center}	
+\end{frame}
+
+\begin{frame}
+    \frametitle{Чтобы самому не считать ($M=4$)}
+	
+	\begin{center}	
+		\begin{tabular}{c|c|l}
+			\hline\hline
+			$M$ & $N$ &Подвязка --- умножить ширину ячейки($c$) на: \\ 
+			\hline\hline
+			4 & 13 & $c$ * 1.390 \\ 
+			4 & 14 & $c$ * 1.336 \\ 
+			4 & 15 & $c$ * 1.284 \\ 
+			4 & 16 & $c$ * 1.235 \\ 
+			4 & 17 & $c$ * 1.189 \\ 
+			4 & 18 & $c$ * 1.145 \\ 
+			4 & 19 & $c$ * 1.103 \\ 
+			4 & 20 & $c$ * 1.064 \\ 
+			4 & 21 & $c$ * 1.027 \\
+			\hline		
+		\end{tabular}
+	\end{center}	
+\end{frame}
+
+\begin{frame}
     \frametitle{Расчет для вывязывания начала циллиндром}
 
     \begin{center}
@@ -315,7 +400,7 @@
 \subsection{Что получается на практике?}
 
 \begin{frame}
-    \frametitle{$M=2, N=7$}
+    \frametitle{$(M=2, N=7); 34cm\to 27.5 (25.8)$ }
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-2Rx07C+stretched}
@@ -325,7 +410,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=2, N=8$}
+    \frametitle{$(M=2, N=8); 34cm\to 28.5 (27.3)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-2Rx08C}
@@ -334,7 +419,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=3, N=10$}
+    \frametitle{$(M=3, N=10); 34cm\to 27.5 (25.3)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-3Rx10C}
@@ -343,7 +428,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=3, N=12$}
+    \frametitle{$(M=3, N=12); 34cm\to 29.5 (27.3)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-3Rx12C}
@@ -352,7 +437,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=3, N=20$}
+    \frametitle{$(M=3, N=20); 34cm\to 32.5 (31.4)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-3Rx20C}
@@ -361,7 +446,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=4, N=13$}
+    \frametitle{$(M=4, N=13); 34cm\to 28 (25.0)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-4Rx13C}
@@ -370,7 +455,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=4, N=16$}
+    \frametitle{$(M=4, N=16); 34cm\to 30 (27.3)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-4Rx16C}
@@ -379,7 +464,7 @@
 \end{frame}
 
 \begin{frame}
-    \frametitle{$M=3, N=6$}
+    \frametitle{$(M=3, N=6); 34cm\to 20 (18.6)$}
 
     \begin{center}
         \includegraphics<1>[width=0.6\textwidth]{figs/cast-3Rx06C}
