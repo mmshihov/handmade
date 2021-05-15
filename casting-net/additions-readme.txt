@@ -2,6 +2,7 @@
 
 ссылка на презентацию:
 https://drive.google.com/file/d/1zT87Ldl00cvxVBTNBVr8gIKZLxSO7pzA/view?usp=sharing
+https://drive.google.com/file/d/1vqZUQ1HgZ8F4Q4SBJ2AA0KqR0x2fOjTI/view?usp=sharing
 
 Привет, друзья, я сейчас расскажу, что в этом видео будет и почему, а те, кто
 хочет перейти к делу, могут сразу воспользоваться оглавлением в описании к
