@@ -81,26 +81,49 @@ class Pattern:
 
 # Определим функции для генерации узоров комнаты:
 
-def generatePatternsChessFloor(): # создаем пол в шахматную клеточку
+# создаем пол в шахматную клеточку (выложен плиткой)
+def generatePatternsChessFloor(): 
     FIELD_COUNT_ON_WIDTH = 10
+    COLORS = ["black", "white"]
 
-    w = (F[0] - G[0])/FIELD_COUNT_ON_WIDTH
+    w = (G[0] - F[0]) / FIELD_COUNT_ON_WIDTH # плитка квадратная, размером w*w
         
     x = F[0] # начинаем генерировать клеточки с левого-нижнего-дальнего угла
-    z = F[2]
-    ix = iy = 0 # для определения того, каким цветом красить плитку 
+    z = F[2] # x, z --- координаты одного из уголоков плитки
+    ix = iz = 0 # номер плитки по ширине и глубине (двумерный массив плиток)
+                # для определения того, каким цветом красить плитку 
                 # в шахматку ((ix+iy) mod COLORS.COUNT)
     patterns = [Pattern("white", [E, F, G, H])] # весь пол
     while (x < G[0]):
+        iz = 0
         while (z > E[2]):
+            # может быть последние плитки будут не целыми, поэтому определяем 
+            # ширину и глубину конкретной плитки:
+            wx = wz = w
+            if (x + wx > G[0]):
+                wx = G[0] - x
+            if (z - wz < E[2]):
+                wz = z - E[2]
+
+            color = COLORS[(ix + iz) % len(COLORS)]     # определяем цвет очередной плитки
+
+            # дополняем масссив узоров очередной плиткой:
+            patterns.append(Pattern( # создаем узор плитки, указывая:
+                color,  # цвет плитки
+                [       # координаты точек плитки, лежащей на полу (плоскость xOz):
+                    [x,         E[2],   z],
+                    [x + wx,    E[2],   z],
+                    [x + wx,    E[2],   z - wz],
+                    [x,         E[2],   z - wz]
+                ]
+            ))
+
             z = z - w
-            iz = iz + 1             
+            iz = iz + 1
         x = x + w
         ix = ix + 1
 
-
-
-    return []
+    return patterns
 
 def generatePatternsCeil():
     pass #TODO
@@ -115,7 +138,9 @@ def generatePatternsFrontWall():
     pass #TODO
 
 
-floorPatterns       = generatePatternsChessFloor() #TODO
+floorPatterns       = generatePatternsChessFloor()
+print(floorPatterns)
+
 ceilPatterns        = generatePatternsCeil() #TODO
 
 leftWallPatterns    = generatePatternsLeftWall() #TODO
