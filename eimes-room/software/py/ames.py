@@ -4,14 +4,24 @@
 
 # Обозначения элементов комнаты Эймса 
 # возьмем как на рисунке:
-# "../../../eimes-room/beamer/figs/ames-only.png"
+# "../../../eimes-room/beamer/figs/ames-only.png" 
+# 
+# Обозначения углов комнаты:
+#   E = левый--нижний--ближний
+#   F = левый--нижний--дальний
+#   A = левый--верхний-ближний
+#   B = левый--верхний-дальний
+#   H = правый-нижний--ближний
+#   G = правый-нижний--дальний
+#   D = правый-верхний-ближний
+#   C = правый-верхний-дальний
 #
 # Т.е.:
-# * floor       - пол (EFGH);
-# * ceil        - потолок (ABCD);
-# * leftWall    - левая стена (EABF);
-# * frontWall   - передняя стена (FBCG);
-# * rightWall   - правая стена (GCDH);
+#   floor       - пол (EFGH);
+#   ceil        - потолок (ABCD);
+#   leftWall    - левая стена (EABF);
+#   frontWall   - передняя стена (FBCG);
+#   rightWall   - правая стена (GCDH);
 # 
 # Одноименные файлы выкроек вы получите на выходе.
 
@@ -71,8 +81,25 @@ class Pattern:
 
 # Определим функции для генерации узоров комнаты:
 
-def generatePatternsChessFloor():
-    print("calkjlk lkjlkjlkj")
+def generatePatternsChessFloor(): # создаем пол в шахматную клеточку
+    FIELD_COUNT_ON_WIDTH = 10
+
+    w = (F[0] - G[0])/FIELD_COUNT_ON_WIDTH
+        
+    x = F[0] # начинаем генерировать клеточки с левого-нижнего-дальнего угла
+    z = F[2]
+    ix = iy = 0 # для определения того, каким цветом красить плитку 
+                # в шахматку ((ix+iy) mod COLORS.COUNT)
+    patterns = [Pattern("white", [E, F, G, H])] # весь пол
+    while (x < G[0]):
+        while (z > E[2]):
+            z = z - w
+            iz = iz + 1             
+        x = x + w
+        ix = ix + 1
+
+
+
     return []
 
 def generatePatternsCeil():
