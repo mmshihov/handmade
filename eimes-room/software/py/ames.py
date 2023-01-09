@@ -286,11 +286,6 @@ leftWallPatterns    = generatePatternsLeftWall()
 rightWallPatterns   = generatePatternsRightWall()
 frontWallPatterns   = generatePatternsFrontWall()
 
-print(ceilPatterns)
-print(leftWallPatterns)
-print(rightWallPatterns)
-print(frontWallPatterns)
-
 # функция получения вектора из двух точек
 def vector3D(a, b):
     return [(b[0] - a[0]),  (b[1] - a[1]),  (b[2] - a[2])]
@@ -316,7 +311,6 @@ def vectorMul3D(a, b):
     (x2, y2, z2) = (b[0], b[1], b[2])
 
     return [y1*z2 - z1*y2, -x1*z2 + z1*x2, x1*y2 - y1*x2]
-
 
 # Введем класс для работы с прямой в 3D:
 # x = P0 + V0*t
@@ -409,7 +403,7 @@ amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
 amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
 
 # Теперь проекции узоров нужно повернуть так, чтобы они "легли" например, на 
-# плоскость xOy (все ухоры лежат в одной плоскости по определению). 
+# плоскость xOy (все узоры лежат в одной плоскости по определению). 
 # Делать это можно с помощью матрицы поворотов. Поворачивать придется 
 # дважды: 
 #  * сначала вокруг оси Oz, на угол между ортом Ox и линией пересечения 
@@ -418,4 +412,67 @@ amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
 #    и линией пересечения плоскости с yOz
 # После этого, координаты z должны стать одинаковыми
 
-# 
+# Определим функцию умножения вектора на матрицу:
+def vectorMulMatrix3D(v, m):
+    r = [0,0,0]
+    for i in range(3):
+        for j in range(3):
+            r[i] += v[j] * m[j][i]
+    return r
+
+# Определим функцию умножения матрицу на матрицу
+def matrixMulMatrix3D(m1,m2):
+    r = [[0,0,0],
+         [0,0,0],
+         [0,0,0]]
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                r[i][j] += m1[i][k]*m2[k][j]
+    return r
+
+from math import sqrt;
+
+ebd = Plane3D(E,B,D)
+print(ebd.ABC)
+
+s = ebd.ABC[0]/sqrt(ebd.ABC[0]*ebd.ABC[0] + ebd.ABC[1]*ebd.ABC[1])
+c = ebd.ABC[1]/sqrt(ebd.ABC[0]*ebd.ABC[0] + ebd.ABC[1]*ebd.ABC[1])
+
+rm = [
+    [c,-s, 0],
+    [s, c, 0],
+    [0, 0, 1]
+]
+
+nE = vectorMulMatrix3D(E, rm)
+nB = vectorMulMatrix3D(B, rm)
+nD = vectorMulMatrix3D(D, rm)
+
+nebd = Plane3D(nE,nB,nD)
+print(nebd.ABC)
+
+c = nebd.ABC[0]/sqrt(nebd.ABC[0]*nebd.ABC[0] + nebd.ABC[2]*nebd.ABC[2])
+s = nebd.ABC[2]/sqrt(nebd.ABC[0]*nebd.ABC[0] + nebd.ABC[2]*nebd.ABC[2])
+
+rm2 = [
+    [c, 0,-s],
+    [0, 1, 0],
+    [s, 0, c]
+]
+
+nnE = vectorMulMatrix3D(nE, rm2)
+nnB = vectorMulMatrix3D(nB, rm2)
+nnD = vectorMulMatrix3D(nD, rm2)
+
+nnebd = Plane3D(nnE,nnB,nnD)
+print(nnebd.ABC)
+
+rm3 = matrixMulMatrix3D(rm, rm2)
+
+nnE = vectorMulMatrix3D(E, rm3)
+nnB = vectorMulMatrix3D(B, rm3)
+nnD = vectorMulMatrix3D(D, rm3)
+
+nnebd = Plane3D(nnE,nnB,nnD)
+print(nnebd.ABC)
