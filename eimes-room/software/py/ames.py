@@ -79,7 +79,7 @@ class Pattern:
 # Так как каждый элемент узора (все его точки) будет испытывать одни и те же
 # линейные преобразования, то будем обрабатывать сразу массивы таких элементов.
 
-# Определим функции для генерации узоров комнаты:
+# Определим несколько функций для генерации узоров комнаты:
 
 # создаем пол в шахматную клеточку (выложен плиткой)
 def generatePatternsChessFloor(): 
@@ -93,8 +93,10 @@ def generatePatternsChessFloor():
     ix = iz = 0 # номер плитки по ширине и глубине (двумерный массив плиток)
                 # для определения того, каким цветом красить плитку 
                 # в шахматку ((ix+iy) mod COLORS.COUNT)
-    patterns = [Pattern("white", [E, F, G, H])] # весь пол
+    patterns = [Pattern("white", [E, F, G, H])] # первым элементом списка будет весь пол
+    # а только потом --- плитки:
     while (x < G[0]):
+        z = F[2]
         iz = 0
         while (z > E[2]):
             # может быть последние плитки будут не целыми, поэтому определяем 
@@ -105,16 +107,16 @@ def generatePatternsChessFloor():
             if (z - wz < E[2]):
                 wz = z - E[2]
 
-            color = COLORS[(ix + iz) % len(COLORS)]     # определяем цвет очередной плитки
+            color = COLORS[(ix + iz) % len(COLORS)] # определяем цвет добавляемой плитки
 
-            # дополняем масссив узоров очередной плиткой:
+            # добавляем плитку в масссив узоров
             patterns.append(Pattern( # создаем узор плитки, указывая:
                 color,  # цвет плитки
                 [       # координаты точек плитки, лежащей на полу (плоскость xOz):
-                    [x,         E[2],   z],
-                    [x + wx,    E[2],   z],
-                    [x + wx,    E[2],   z - wz],
-                    [x,         E[2],   z - wz]
+                    [x,         E[1],   z],
+                    [x + wx,    E[1],   z],
+                    [x + wx,    E[1],   z - wz],
+                    [x,         E[1],   z - wz]
                 ]
             ))
 
@@ -125,15 +127,85 @@ def generatePatternsChessFloor():
 
     return patterns
 
+# На потолке будет пять квадратных светильников (четыре по краям, один большой в центре)
 def generatePatternsCeil():
-    pass #TODO
+    LIGHT_DIMENSION_PER_WIDTH = 10 # сколько светильников помещается по ширине (минимум)
+    COLOR = "blue"
 
+    wx = (C[0] - B[0]) / LIGHT_DIMENSION_PER_WIDTH # размер светильника по ширине
+    wz = (B[2] - A[2]) / LIGHT_DIMENSION_PER_WIDTH # размер светильника по глубине
+
+    w = wx
+    if (wz < w): w = wz
+
+    patterns = [Pattern("white", [A, B, C, D])] # первым элементом списка будет весь потолок
+
+    x = B[0] + w;  z = B[2] - 2*w
+    patterns.append(Pattern(
+        COLOR,
+        [
+            [x,     A[1], z],
+            [x + w, A[1], z],
+            [x + w, A[1], z + w],
+            [x,     A[1], z + w]
+        ]))
+
+    # светильники:
+    x = B[0] + w;  z = B[2] - 2*w       # левый-дальний
+    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
+
+    x = B[0] + w;  z = A[2] + w         # левый-ближний
+    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
+
+    x = C[0] - 2*w;  z = C[2] - 2*w     # правый-дальний
+    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
+
+    x = C[0] - 2*w;  z = D[2] + w       # правый-ближний
+    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
+
+    # центральный (больше остальных в два раза линейно)
+    x = (B[0] + C[0]) / 2;  z = (A[2] + B[2]) / 2
+    patterns.append(Pattern(
+        COLOR,
+        [
+            [x - w, A[1], z - w],
+            [x - w, A[1], z + w],
+            [x + w, A[1], z + w],
+            [x + w, A[1], z - w],
+        ]))
+
+    return patterns
+
+# На всех стенах есть фартук:
+BORDER_HEIGHT = HEIGHT / 2
+BORDER_COLOR  = "green"
+
+# левая стена с дверью
 def generatePatternsLeftWall():
-    pass #TODO
+    DOOR_HEIGHT = HEIGHT * 4 / 5
+    DOOR_WIDTH  = DOOR_HEIGHT / 2.5
+    DOOR_COLOR = "grey"
 
+    patterns = [Pattern("white", [E, A, B, F])] # стена целиком
+
+    # фартук
+    patterns.append(Pattern(
+        BORDER_COLOR,
+        [
+            E,
+            [E[0], E[1] + BORDER_HEIGHT, E[2]],
+            [F[0], F[1] + BORDER_HEIGHT, F[2]],
+            F
+        ]))
+    
+    # дверь
+
+
+# правая стена с окном или картиной
 def generatePatternsRightWall():
     pass #TODO
 
+# дальняя стена с камином или панно
 def generatePatternsFrontWall():
     pass #TODO
 
