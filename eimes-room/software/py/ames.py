@@ -140,16 +140,6 @@ def generatePatternsCeil():
 
     patterns = [Pattern("white", [A, B, C, D])] # первым элементом списка будет весь потолок
 
-    x = B[0] + w;  z = B[2] - 2*w
-    patterns.append(Pattern(
-        COLOR,
-        [
-            [x,     A[1], z],
-            [x + w, A[1], z],
-            [x + w, A[1], z + w],
-            [x,     A[1], z + w]
-        ]))
-
     # светильники:
     x = B[0] + w;  z = B[2] - 2*w       # левый-дальний
     patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
@@ -183,7 +173,7 @@ BORDER_COLOR  = "green"
 # левая стена с дверью
 def generatePatternsLeftWall():
     DOOR_HEIGHT = HEIGHT * 4 / 5
-    DOOR_WIDTH  = DOOR_HEIGHT / 2.5
+    DOOR_WIDTH  = DOOR_HEIGHT / 3
     DOOR_COLOR = "grey"
 
     patterns = [Pattern("white", [E, A, B, F])] # стена целиком
@@ -195,7 +185,7 @@ def generatePatternsLeftWall():
             E,
             [E[0], E[1] + BORDER_HEIGHT, E[2]],
             [F[0], F[1] + BORDER_HEIGHT, F[2]],
-            F   
+            F
         ]))
     
     # дверь
@@ -214,7 +204,7 @@ def generatePatternsLeftWall():
 # правая стена с такой же дверью и картиной
 def generatePatternsRightWall():
     DOOR_HEIGHT = HEIGHT * 4 / 5
-    DOOR_WIDTH  = DOOR_HEIGHT / 2.5
+    DOOR_WIDTH  = DOOR_HEIGHT / 3
     DOOR_COLOR = "grey"
 
     PICTURE_HEIGHT = HEIGHT / 4
@@ -265,9 +255,19 @@ def generatePatternsFrontWall():
     
     patterns = [Pattern("white", [B, C, G, F])] # стена целиком
 
+    # фартук
+    patterns.append(Pattern(
+        BORDER_COLOR,
+        [
+            F,
+            [F[0], F[1] + BORDER_HEIGHT, F[2]],
+            [G[0], G[1] + BORDER_HEIGHT, G[2]],
+            G
+        ]))
+
     # картина по центру стены
     x = (F[0] + G[0])/2
-    y = (F[2] + B[2])/2
+    y = (F[1] + B[1])/2
     patterns.append(Pattern(
         PICTURE_COLOR,
         [
@@ -279,18 +279,34 @@ def generatePatternsFrontWall():
 
     return patterns
 
-# # сохраняем узоры в соответствующих переменных:
-# floorPatterns       = generatePatternsChessFloor()
-# ceilPatterns        = generatePatternsCeil()
-# leftWallPatterns    = generatePatternsLeftWall()
-# rightWallPatterns   = generatePatternsRightWall()
-# frontWallPatterns   = generatePatternsFrontWall()
+# сохраняем узоры в соответствующих переменных:
+floorPatterns       = generatePatternsChessFloor()
+ceilPatterns        = generatePatternsCeil()
+leftWallPatterns    = generatePatternsLeftWall()
+rightWallPatterns   = generatePatternsRightWall()
+frontWallPatterns   = generatePatternsFrontWall()
+
+print(ceilPatterns)
+print(leftWallPatterns)
+print(rightWallPatterns)
+print(frontWallPatterns)
 
 # функция получения вектора из двух точек
 def vector3D(a, b):
     return [(b[0] - a[0]),  (b[1] - a[1]),  (b[2] - a[2])]
 
-# определим функцию, выполняющую векторное произведение 
+# Определим функцию, выполняющую скалярное произведение 
+# векторов a, b в 3D:
+def scalarMul3D(a, b):
+    # по учебнику из раздела аналитической геометрии
+    # a = [x1,y1,z1]
+    # b = [x2,y2,z2]
+    (x1, y1, z1) = (a[0], a[1], a[2])
+    (x2, y2, z2) = (b[0], b[1], b[2])
+
+    return x1*x2 + y1*y2 + z1*z2
+
+# Определим функцию, выполняющую векторное произведение 
 # векторов a, b в 3D:
 def vectorMul3D(a, b):
     # по учебнику из раздела аналитической геометрии
@@ -302,7 +318,11 @@ def vectorMul3D(a, b):
     return [y1*z2 - z1*y2, -x1*z2 + z1*x2, x1*y2 - y1*x2]
 
 
-# Введем класс для работы с прямой
+# Введем класс для работы с прямой в 3D:
+# x = P0 + V0*t
+# y = P1 + V1*t
+# z = P2 + V2*t
+# --- т.е. прямая задается начальной координатой P и вектором направления V
 class Line3D:
     def __init__(self, a, b): # конструируется (уравнение Ax+By+Cz+D=0) по трем точкам
         self.V = vector3D(a, b)
@@ -315,7 +335,6 @@ class Line3D:
             self.P[2] + self.V[2]*t
         ]
 
-
 # Введем класс для работы с плоскостью
 # может стоит вынести в отдельный модуль (хотя работа с матри)
 class Plane3D:
@@ -326,16 +345,77 @@ class Plane3D:
         self.ABC = vectorMul3D(abVector, acVector)
         self.D   = -(self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2])
 
-    def intersectionPointWithLine(self, l):
-        #TODO
-        return []
+    def intersectionPointWithLine(self, l:Line3D):
+        scalar = scalarMul3D(self.ABC, l.V)
+        if (scalar == 0):
+            raise ValueError("Прямая и плоскость не пересекаются!")
+        
+        t = -(scalarMul3D(self.ABC, l.P) + self.D)/scalar
+
+        return l.point(t)
 
     def delta(self, a):
         return self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2] + self.D
 
 
-# Функции для генерации узоров
+# Определим новые точки C и G (amesC, amesG), отодвинув их на луче зрения.
+# Напомним, что луч зрения исходит из точки V.
+# Масштаб искажения:
+SCALE = 2
 
+amesC = Line3D(V, C).point(SCALE)
+amesG = Line3D(V, G).point(SCALE)
 
+# По построению точки B,D,F,H остаются неизменными:
+amesB = B
+amesD = D
+amesF = F
+amesH = H
 
+# Теперь можно определить плоскости пола, потолка, правой и дальней стены
+# комнаты Эймса:
+amesFloor       = Plane3D(amesF, amesH, amesG)
+amesCeil        = Plane3D(amesB, amesD, amesC)
+amesRightWall   = Plane3D(amesD, amesH, amesC)
+amesFrontWall   = Plane3D(amesB, amesF, amesC)
 
+# Осталось найти плоскость левой стены. Луч зрения VA пересечет потолок 
+# в точке A', которая также принадлежит левой стене
+amesA = amesCeil.intersectionPointWithLine(Line3D(V,A))
+
+# Таким образом, плоскость левой стены тоже определена:
+amesLeftWall   = Plane3D(amesA, amesB, amesF)
+
+# Определим функцию, которая строит проекцию точки, на которую смотрят
+# из точки V на заданную плоскость:
+def viewProjectionPointOnPlane(point, plane:Plane3D):
+    return plane.intersectionPointWithLine(Line3D(V, point))
+
+# Определим также функцию, которая проецирует целый массив узоров
+def patternsProjection(patterns:list[Pattern], plane:Plane3D):
+    projections = []
+    for pattern in patterns:
+        points = []
+        for point in pattern.points:
+            points.append(viewProjectionPointOnPlane(point, plane)) # спроецировали каждую точку
+        projections.append(Pattern(pattern.color, points))
+    return projections
+
+# Находим проекции узоров
+amesFloorPatterns       = patternsProjection(floorPatterns, amesFloor)
+amesCeilPatterns        = patternsProjection(ceilPatterns, amesCeil)
+amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
+amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
+amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
+
+# Теперь проекции узоров нужно повернуть так, чтобы они "легли" например, на 
+# плоскость xOy (все ухоры лежат в одной плоскости по определению). 
+# Делать это можно с помощью матрицы поворотов. Поворачивать придется 
+# дважды: 
+#  * сначала вокруг оси Oz, на угол между ортом Ox и линией пересечения 
+#    плоскости с xOy
+#  * затем, после предыдущего поворота, вокруг оси Ox, на угол между ортом Oy 
+#    и линией пересечения плоскости с yOz
+# После этого, координаты z должны стать одинаковыми
+
+# 
