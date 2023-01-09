@@ -195,30 +195,143 @@ def generatePatternsLeftWall():
             E,
             [E[0], E[1] + BORDER_HEIGHT, E[2]],
             [F[0], F[1] + BORDER_HEIGHT, F[2]],
-            F
+            F   
         ]))
     
     # дверь
+    patterns.append(Pattern(
+        DOOR_COLOR,
+        [
+            [F[0], F[1],                F[2] - DOOR_WIDTH],
+            [F[0], F[1],                F[2] - 2*DOOR_WIDTH],
+            [F[0], F[1] + DOOR_HEIGHT,  F[2] - 2*DOOR_WIDTH],
+            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH]
+        ]))
+
+    return patterns
 
 
-# правая стена с окном или картиной
+# правая стена с такой же дверью и картиной
 def generatePatternsRightWall():
-    pass #TODO
+    DOOR_HEIGHT = HEIGHT * 4 / 5
+    DOOR_WIDTH  = DOOR_HEIGHT / 2.5
+    DOOR_COLOR = "grey"
 
-# дальняя стена с камином или панно
+    PICTURE_HEIGHT = HEIGHT / 4
+    PICTURE_WIDTH  = DEPTH / 8
+    PICTURE_COLOR = "blue"
+    
+    patterns = [Pattern("white", [H, D, C, G])] # стена целиком
+
+    # фартук
+    patterns.append(Pattern(
+        BORDER_COLOR,
+        [
+            H,
+            [H[0], H[1] + BORDER_HEIGHT, H[2]],
+            [G[0], G[1] + BORDER_HEIGHT, G[2]],
+            G
+        ]))
+    
+    # дверь
+    patterns.append(Pattern(
+        DOOR_COLOR,
+        [
+            [G[0], G[1],                G[2] - DOOR_WIDTH],
+            [G[0], G[1],                G[2] - 2*DOOR_WIDTH],
+            [G[0], G[1] + DOOR_HEIGHT,  G[2] - 2*DOOR_WIDTH],
+            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH]
+        ]))
+
+    # картина по центру стены
+    y = (C[1] + G[1])/2
+    z = (H[2] + G[2])/2
+    patterns.append(Pattern(
+        PICTURE_COLOR,
+        [
+            [G[0], y - PICTURE_HEIGHT/2, z - PICTURE_WIDTH/2],
+            [G[0], y - PICTURE_HEIGHT/2, z + PICTURE_WIDTH/2],
+            [G[0], y + PICTURE_HEIGHT/2, z + PICTURE_WIDTH/2],
+            [G[0], y + PICTURE_HEIGHT/2, z - PICTURE_WIDTH/2]
+        ]))
+
+    return patterns
+
+# дальняя стена с камином или картиной по центру
 def generatePatternsFrontWall():
-    pass #TODO
+    PICTURE_HEIGHT = HEIGHT / 2
+    PICTURE_WIDTH  = WIDTH / 2
+    PICTURE_COLOR = "blue"
+    
+    patterns = [Pattern("white", [B, C, G, F])] # стена целиком
+
+    # картина по центру стены
+    x = (F[0] + G[0])/2
+    y = (F[2] + B[2])/2
+    patterns.append(Pattern(
+        PICTURE_COLOR,
+        [
+            [x - PICTURE_WIDTH/2, y - PICTURE_HEIGHT/2, F[2]],
+            [x + PICTURE_WIDTH/2, y - PICTURE_HEIGHT/2, F[2]],
+            [x + PICTURE_WIDTH/2, y + PICTURE_HEIGHT/2, F[2]],
+            [x - PICTURE_WIDTH/2, y + PICTURE_HEIGHT/2, F[2]]
+        ]))
+
+    return patterns
+
+# # сохраняем узоры в соответствующих переменных:
+# floorPatterns       = generatePatternsChessFloor()
+# ceilPatterns        = generatePatternsCeil()
+# leftWallPatterns    = generatePatternsLeftWall()
+# rightWallPatterns   = generatePatternsRightWall()
+# frontWallPatterns   = generatePatternsFrontWall()
+
+# функция получения вектора из двух точек
+def vector3D(a, b):
+    return [(b[0] - a[0]),  (b[1] - a[1]),  (b[2] - a[2])]
+
+# определим функцию, выполняющую векторное произведение 
+# векторов a, b в 3D:
+def vectorMul3D(a, b):
+    # по учебнику из раздела аналитической геометрии
+    # a = [x1,y1,z1]
+    # b = [x2,y2,z2]
+    (x1, y1, z1) = (a[0], a[1], a[2])
+    (x2, y2, z2) = (b[0], b[1], b[2])
+
+    return [y1*z2 - z1*y2, -x1*z2 + z1*x2, x1*y2 - y1*x2]
 
 
-floorPatterns       = generatePatternsChessFloor()
-print(floorPatterns)
+# Введем класс для работы с прямой
+class Line3D:
+    def __init__(self, a, b): # конструируется (уравнение Ax+By+Cz+D=0) по трем точкам
+        self.V = vector3D(a, b)
+        self.P = [a[0], a[1], a[2]]
 
-ceilPatterns        = generatePatternsCeil() #TODO
+    def point(self, t):
+        return [
+            self.P[0] + self.V[0]*t,
+            self.P[1] + self.V[1]*t,
+            self.P[2] + self.V[2]*t
+        ]
 
-leftWallPatterns    = generatePatternsLeftWall() #TODO
-rightWallPatterns   = generatePatternsRightWall() #TODO
-frontWallPatterns   = generatePatternsFrontWall() #TODO
 
+# Введем класс для работы с плоскостью
+# может стоит вынести в отдельный модуль (хотя работа с матри)
+class Plane3D:
+    def __init__(self, a, b, c): # конструируется (уравнение Ax+By+Cz+D=0) по трем точкам
+        abVector = vector3D(a, b)
+        acVector = vector3D(a, c)
+
+        self.ABC = vectorMul3D(abVector, acVector)
+        self.D   = -(self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2])
+
+    def intersectionPointWithLine(self, l):
+        #TODO
+        return []
+
+    def delta(self, a):
+        return self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2] + self.D
 
 
 # Функции для генерации узоров
