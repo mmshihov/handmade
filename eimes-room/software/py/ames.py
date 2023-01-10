@@ -336,7 +336,7 @@ class Plane3D:
         abVector = vector3D(a, b)
         acVector = vector3D(a, c)
 
-        self.ABC = vectorMul3D(abVector, acVector)
+        self.ABC = vectorMul3D(abVector, acVector) # вектор нормали плоскости
         self.D   = -(self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2])
 
     def intersectionPointWithLine(self, l:Line3D):
@@ -431,48 +431,67 @@ def matrixMulMatrix3D(m1,m2):
                 r[i][j] += m1[i][k]*m2[k][j]
     return r
 
+# достанем функцию квадратного корня из пакета math
 from math import sqrt;
 
-ebd = Plane3D(E,B,D)
-print(ebd.ABC)
+# Определим функию поворота произвольно расположенной плоскости 
+# так, чтобы она стала параллельной плоскости xOy. 
+# Поворот сохраняет расстояние между точками, соответственно
+# такое преобразование позволяет получить 2D выкройку на плоскости. 
+# Выполняется два поворота: первый --- вокруг оси Oz, 
+# второй --- вокруг Oy 
+# ---
+# Функция возвращает результирующую матрицу, на которую можно 
+# умножать любую 3D точку, лежащую в исходной плоскости и таким образом 
+# получать ее координаты на плоскости
 
-s = ebd.ABC[0]/sqrt(ebd.ABC[0]*ebd.ABC[0] + ebd.ABC[1]*ebd.ABC[1])
-c = ebd.ABC[1]/sqrt(ebd.ABC[0]*ebd.ABC[0] + ebd.ABC[1]*ebd.ABC[1])
+def matrixFor2D_xOy(plane:Plane3D):
+    # находим синус и косинус угла поворота вектора нормали плоскости вокруг оси
+    # Oz (после поворота компонента y (plane.ABC[1]) вектора нормали должна стать 
+    # нулевой)
+    s = plane.ABC[1]/sqrt(plane.ABC[0]*plane.ABC[0] + plane.ABC[1]*plane.ABC[1])
+    c = plane.ABC[0]/sqrt(plane.ABC[0]*plane.ABC[0] + plane.ABC[1]*plane.ABC[1])
 
-rm = [
-    [c,-s, 0],
-    [s, c, 0],
-    [0, 0, 1]
-]
+    rm1 = [ # так выглядит матрица поворота вокруг Oz
+        [ c,-s, 0],
+        [ s, c, 0],
+        [ 0, 0, 1]
+    ]
 
-nE = vectorMulMatrix3D(E, rm)
-nB = vectorMulMatrix3D(B, rm)
-nD = vectorMulMatrix3D(D, rm)
+    # повернули исходный вектор нормали (y - составляющая == 0)
+    newABC = vectorMulMatrix3D(plane.ABC, rm1)
 
-nebd = Plane3D(nE,nB,nD)
-print(nebd.ABC)
+    # синус и косинус угла поворота вокруг Oy
+    s = newABC[0]/sqrt(newABC[0]*newABC[0] + newABC[2]*newABC[2])
+    c = newABC[2]/sqrt(newABC[0]*newABC[0] + newABC[2]*newABC[2])
 
-c = nebd.ABC[0]/sqrt(nebd.ABC[0]*nebd.ABC[0] + nebd.ABC[2]*nebd.ABC[2])
-s = nebd.ABC[2]/sqrt(nebd.ABC[0]*nebd.ABC[0] + nebd.ABC[2]*nebd.ABC[2])
+    rm2 = [ # матрица поворота вокруг Oy
+        [ c, 0, s],
+        [ 0, 1, 0],
+        [-s, 0, c]
+    ]
 
-rm2 = [
-    [c, 0,-s],
-    [0, 1, 0],
-    [s, 0, c]
-]
+    return matrixMulMatrix3D(rm1, rm2)  # два поворота в одной матрице!!!
+                                        # (v*rm1)*rm2 == v*(rm1*rm2)
 
-nnE = vectorMulMatrix3D(nE, rm2)
-nnB = vectorMulMatrix3D(nB, rm2)
-nnD = vectorMulMatrix3D(nD, rm2)
+# Определим функцию, которая поворачивает массив узоров, которые лежат в
+# одной плоскости (аргумент plane)
+def patternsRotationFor2D_xOy(patterns:list[Pattern], plane:Plane3D):
+    rm = matrixFor2D_xOy(plane)
+    rotations = []
+    for pattern in patterns:
+        points = []
+        for point in pattern.points:
+            points.append(vectorMulMatrix3D(point, rm)) # поворачиваем каждую точку
+        rotations.append(Pattern(pattern.color, points))
+    return rotations
 
-nnebd = Plane3D(nnE,nnB,nnD)
-print(nnebd.ABC)
+# получили выкройки на плоскости (координаты z у всех точек выкройки для каждого 
+# узора в списке --- одинаковые)
+ames2D_xOy_FloorPatterns       = patternsRotationFor2D_xOy(amesFloorPatterns, amesFloor)
+ames2D_xOy_CeilPatterns        = patternsRotationFor2D_xOy(amesCeilPatterns, amesCeil)
+ames2D_xOy_LeftWallPatterns    = patternsRotationFor2D_xOy(amesLeftWallPatterns, amesLeftWall)
+ames2D_xOy_RightWallPatterns   = patternsRotationFor2D_xOy(amesRightWallPatterns, amesRightWall)
+ames2D_xOy_FrontWallPatterns   = patternsRotationFor2D_xOy(amesFrontWallPatterns, amesFrontWall)
 
-rm3 = matrixMulMatrix3D(rm, rm2)
-
-nnE = vectorMulMatrix3D(E, rm3)
-nnB = vectorMulMatrix3D(B, rm3)
-nnD = vectorMulMatrix3D(D, rm3)
-
-nnebd = Plane3D(nnE,nnB,nnD)
-print(nnebd.ABC)
+# TODO: это можно перегонять в векторное изображение и пробовать печатать
