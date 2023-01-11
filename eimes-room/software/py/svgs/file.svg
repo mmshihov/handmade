@@ -1,0 +1,19 @@
+<svg width="400" height="400" version="1.1"
+viewBox="0 0 800 800" preserveAspectRatio="none"
+baseProfile="full"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events">
+ 
+<!--colored circles in corners of  the canvas  -->
+    <circle cx="55" cy="55" r="50" fill="rgba(20,255,24, 0.5)"  stroke="rgba(6,90,6, 0.75)" stroke-width="2"/>
+    <circle cx="350" cy="55" r="50" fill="rgba(57,65,212, 0.5)"  stroke="rgba(26,31,167, 0.75)" stroke-width="2"/>
+    <circle cx="350" cy="350" r="50" fill="rgba(212,30,75, 0.5)"  stroke="rgba(212,30,75, 0.75)" stroke-width="2"/>
+    <circle cx="55" cy="350" r="50" fill="rgba(255,221,0, 0.5)"  stroke="rgba(169,146,0, 0.75)" stroke-width="2"/>
+ 
+    <!--the red rectangle outside viewing area  svg   -->
+    <rect x="390" y="165" width="100" height="100" fill="rgba(244,47,39, 0.6)"  stroke="rgba(244,47,39, 0.75)" stroke-width="2"/>
+	<rect x="160" y="390" width="100" height="100" fill="rgba(244,47,39, 0.6)"  stroke="rgba(244,47,39, 0.75)" stroke-width="2"/>	
+
+	<rect x="100" y="100" width="200" height="200" fill="rgba(244,47,39, 0.6)"  stroke="rgba(244,47,39, 0.75)" stroke-width="2"/>	
+</svg>

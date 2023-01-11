@@ -494,4 +494,98 @@ ames2D_xOy_LeftWallPatterns    = patternsRotationFor2D_xOy(amesLeftWallPatterns,
 ames2D_xOy_RightWallPatterns   = patternsRotationFor2D_xOy(amesRightWallPatterns, amesRightWall)
 ames2D_xOy_FrontWallPatterns   = patternsRotationFor2D_xOy(amesFrontWallPatterns, amesFrontWall)
 
-# TODO: это можно перегонять в векторное изображение и пробовать печатать
+# сделаем также выкройки базовой комнаты (все, кроме дальней стены, которая и 
+# xOy, нужно будет повернуть):
+room2D_xOy_FloorPatterns       = patternsRotationFor2D_xOy(floorPatterns, Plane3D(E, F, G))
+room2D_xOy_CeilPatterns        = patternsRotationFor2D_xOy(ceilPatterns, Plane3D(A, B, D))
+room2D_xOy_LeftWallPatterns    = patternsRotationFor2D_xOy(leftWallPatterns, Plane3D(E, A, F))
+room2D_xOy_RightWallPatterns   = patternsRotationFor2D_xOy(rightWallPatterns, Plane3D(H, D, G))
+room2D_xOy_FrontWallPatterns   = frontWallPatterns
+
+# Определим функцию, возвращающую параметры прямогугольной области
+# (xMin, yMin, width, height), которая содержит все узоры в заданном массиве узоров
+# Функция работает с выкройкой (т.е. использует только координаты x,y трехмерной точки
+# [x,y,z])
+def patternsArea2D_xOy(patterns: list[Pattern]):
+    if (len(patterns) == 0):
+        raise ValueError("Пустые массивы узоров не принимаются!")
+
+    xMin = xMax = patterns[0].points[0][0]
+    yMin = yMax = patterns[0].points[0][1]
+
+    for pattern in patterns:
+        for point in pattern.points:
+            x = point[0]
+            if x < xMin: xMin = x
+            if x > xMax: xMax = x
+
+            y = point[1]
+            if y < yMin: yMin = y
+            if y > yMax: yMax = y
+    
+    return (xMin, yMin, xMax - xMin, yMax - yMin)
+
+# Формируем SVG-файл. Он текстовый, его можно читать человеку и даже понимать, 
+# что там нарисовано. Определим вспомогательные функции для формирования
+# текстовых элементов SVG файла.
+
+# Все наши измерения в миллиметрах, к счастью SVG работает с милиметрами 
+# (и не только). Но по умолчанию он работает с пикселами. Т.е., если для 
+# координаты или размерности указано число, то это будет трактоваться 
+# как количество пикселей. Чтобы работать в миллиметрах, нужно указывать
+# постфикс "mm". Например, "height=100mm". Напишем функцию, форматирующую 
+# наше число в правильную SVG-шную строку
+def svgFormatInMm(digit):
+    return "{:.2f}mm".format(digit)
+
+def svgFormatInViewPort(digit):
+    return "{:.2f}".format(digit)
+
+
+# Открывающий тэг заголовка SVG-файла "<svg ...>"" 
+# Имеет парную закрывающую часть "</svg>"
+# Между открывающей и закрывающей частями будут находится команды рисования
+def SVG_HEAD(width, height, viewBox): 
+    # в питоне вот так можно в тройных кавычках писать многострочный текст:
+    return '''\
+<svg version="1.1"
+     baseProfile="full"
+     width="{0}" 
+     height="{1}"
+     viewBox="{2}"
+     preserveAspectRatio="none"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events">'''.format(width, height, viewBox)
+
+def SVG_TAIL():
+    return '</svg>'
+
+def SVG_POLYGON_FROM_PATTERN(pattern:Pattern):
+    pointsStr = ""
+    for point in pattern.points:
+        x, y = point[0], point[1]
+        if len(pointsStr) == 0:
+            pointsStr = pointsStr + '{0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
+        else:
+            pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
+
+    return '<polygon points="{0}" fill="{1}"/>'.format(pointsStr, pattern.color)
+
+def SVG_FOR_PATTERNS(pattarns:list[Pattern]):
+    xMin, yMin, w, h = patternsArea2D_xOy(pattarns)
+    viewBox = '{} {} {} {}'.format(svgFormatInViewPort(xMin), svgFormatInViewPort(yMin), svgFormatInViewPort(w), svgFormatInViewPort(h))
+
+    str = SVG_HEAD(svgFormatInMm(w), svgFormatInMm(h), viewBox)
+    for pattern in pattarns:
+        str = str + "\n" + SVG_POLYGON_FROM_PATTERN(pattern)
+
+    str = str + SVG_TAIL()
+
+    return str
+
+#TODO: добавить марку точки просмотра (зеленый треугольник), а то хз как склеить
+# добавить границу на первом элементе массива узоров: stroke="black" stroke-width="1px"
+# границ не видно из за точного совпадения вьюпорта с вьюбоксом - надо чутка увеличить ширину и высоту
+# ну, и сделать сохранение в файл
+print(SVG_FOR_PATTERNS(room2D_xOy_FloorPatterns))
