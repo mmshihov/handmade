@@ -1,5 +1,5 @@
 # Это программа-генератор выкроек стен, потолка и пола комнаты Эймса. 
-# Выкройки будут генерироваться в векторном формате (SVG или METAPOST)
+# Выкройки будут генерироваться в векторном формате SVG
 # Бери, печатай, вырезай, клей.
 
 # Обозначения элементов комнаты Эймса 
@@ -222,10 +222,10 @@ def generatePatternsLeftWall():
     patterns.append(Pattern(
         DOOR_COLOR,
         [
-            [F[0], F[1],                F[2] - DOOR_WIDTH],
-            [F[0], F[1],                F[2] - 2*DOOR_WIDTH],
-            [F[0], F[1] + DOOR_HEIGHT,  F[2] - 2*DOOR_WIDTH],
-            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH]
+            [F[0], F[1],                F[2] - DOOR_WIDTH/2],
+            [F[0], F[1],                F[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
+            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
+            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH/2]
         ]))
 
     # Добавим треугольную маркировку центра точки зрения
@@ -248,7 +248,7 @@ def generatePatternsRightWall():
     DOOR_COLOR = "grey"
 
     PICTURE_HEIGHT = HEIGHT / 4
-    PICTURE_WIDTH  = DEPTH / 8
+    PICTURE_WIDTH  = DEPTH / 4
     PICTURE_COLOR = "blue"
     
     patterns = [Pattern("white", [H, D, C, G])] # стена целиком
@@ -267,10 +267,10 @@ def generatePatternsRightWall():
     patterns.append(Pattern(
         DOOR_COLOR,
         [
-            [G[0], G[1],                G[2] - DOOR_WIDTH],
-            [G[0], G[1],                G[2] - 2*DOOR_WIDTH],
-            [G[0], G[1] + DOOR_HEIGHT,  G[2] - 2*DOOR_WIDTH],
-            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH]
+            [G[0], G[1],                G[2] - DOOR_WIDTH/2],
+            [G[0], G[1],                G[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
+            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
+            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH/2]
         ]))
 
     # картина по центру стены
@@ -379,8 +379,8 @@ class Line3D:
             self.P[2] + self.V[2]*t
         ]
 
-# Введем класс для работы с плоскостью
-# может стоит вынести в отдельный модуль (хотя работа с матри)
+# Введем класс для работы с плоскостью (все, что нам нужно от 
+# полскости --- это находить точку, в которой она пересекается с 3D прямой)
 class Plane3D:
     def __init__(self, a, b, c): # конструируется (уравнение Ax+By+Cz+D=0) по трем точкам
         abVector = vector3D(a, b)
@@ -389,7 +389,8 @@ class Plane3D:
         self.ABC = vectorMul3D(abVector, acVector) # вектор нормали плоскости
         self.D   = -(self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2])
 
-    def intersectionPointWithLine(self, l:Line3D):
+    # находит точку пересечения себя с прямой l
+    def intersectionPointWithLine(self, l:Line3D): 
         scalar = scalarMul3D(self.ABC, l.V)
         if (scalar == 0):
             raise ValueError("Прямая и плоскость не пересекаются!")
@@ -397,9 +398,6 @@ class Plane3D:
         t = -(scalarMul3D(self.ABC, l.P) + self.D)/scalar
 
         return l.point(t)
-
-    def delta(self, a):
-        return self.ABC[0]*a[0] + self.ABC[1]*a[1] + self.ABC[2]*a[2] + self.D
 
 
 # Определим новые точки C и G (amesC, amesG), отодвинув их на луче зрения.
@@ -524,17 +522,22 @@ def matrixFor2D_xOy(plane:Plane3D):
     return matrixMulMatrix3D(rm1, rm2)  # два поворота в одной матрице!!!
                                         # (v*rm1)*rm2 == v*(rm1*rm2)
 
-# Определим функцию, которая поворачивает массив узоров, которые лежат в
-# одной плоскости (аргумент plane)
-def patternsRotationFor2D_xOy(patterns:list[Pattern], plane:Plane3D):
-    rm = matrixFor2D_xOy(plane)
-    rotations = []
+# Определим функцию, которая преобразует точки массива узоров, 
+# умножая их на матрицу m (с помощью матриц можно, например,
+# вращать и отражать точки(вектора))
+def patternsMulMatrix3D(patterns:list[Pattern], m):
+    newPatterns = []
     for pattern in patterns:
         points = []
         for point in pattern.points:
-            points.append(vectorMulMatrix3D(point, rm)) # поворачиваем каждую точку
-        rotations.append(Pattern(pattern.color, points))
-    return rotations
+            points.append(vectorMulMatrix3D(point, m)) # умножаем каждую точку
+        newPatterns.append(Pattern(pattern.color, points))
+    return newPatterns
+
+# Определим функцию, которая поворачивает массив узоров, которые лежат в
+# одной плоскости (аргумент plane)
+def patternsRotationFor2D_xOy(patterns:list[Pattern], plane:Plane3D):
+    return patternsMulMatrix3D(patterns, matrixFor2D_xOy(plane))
 
 # получили выкройки на плоскости (координаты z у всех точек выкройки для каждого 
 # узора в списке --- одинаковые)
@@ -598,15 +601,14 @@ def svgFormatInViewPort(digit):
 def SVG_HEAD(width, height, viewBox): 
     # в питоне вот так можно в тройных кавычках писать многострочный текст:
     return '''\
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg version="1.1"
-     baseProfile="full"
      width="{0}" 
      height="{1}"
      viewBox="{2}"
      preserveAspectRatio="none"
-     xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     xmlns:ev="http://www.w3.org/2001/xml-events">'''.format(width, height, viewBox)
+     xmlns="http://www.w3.org/2000/svg">
+'''.format(width, height, viewBox)
 
 def SVG_TAIL():
     return '</svg>'
@@ -652,8 +654,44 @@ def SVG_FOR_PATTERNS(patterns:list[Pattern]):
 
     return str
 
+# Сохраняем массив 2D узоров файл (в том же каталоге, что и скрипт)
+def savePatternsToSvg(fileName:str, patterns:list[Pattern]):
+    file = open('{}.svg'.format(fileName), mode='wt', encoding='utf-8')
+    file.write(SVG_FOR_PATTERNS(patterns))
+    file.close()
 
-# TODO: сделать сохранение в файл
-# TODO: изображение на плоскости нужно отражать по Y (т.к. в компьютерных координатах oY идет вниз )
-# TODO: на некоторые выкройки мы смотрим (с другой стороны "прозрачной" стены)
-print(SVG_FOR_PATTERNS(ames2D_xOy_FloorPatterns))
+# Так как мы формировали узор в комнате, как бы смотря "изнутри", то 
+# получается, что на проекции (которая по вектору одного направления) 
+# мы как бы смотрим на узор стены "снаружи" комнаты). 
+# Поэтому часть узоров нужно печатать в отражении.
+# Поэтому определим несколько зеркально "отражащюих" функций:
+
+# отражение по xOz (y = -y)
+def mirrorOx(patterns: list[Pattern]):
+    m = [   [1, 0, 0], # это матрица отражения y = -y
+            [0,-1, 0],
+            [0, 0, 1] ]
+    return patternsMulMatrix3D(patterns, m)
+
+# отражение по Oy (x = -x)
+def mirrorOy(patterns: list[Pattern]):
+    m = [   [-1, 0, 0],
+            [ 0, 1, 0],
+            [ 0, 0, 1] ]
+    return patternsMulMatrix3D(patterns, m)
+
+# Сохраняем узоры в SVG (ищите файлы там же, где лежит скрипт).
+# Часть узоров делаем в отражении (научный тык).
+savePatternsToSvg('ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
+savePatternsToSvg('ames_Ceil',      ames2D_xOy_CeilPatterns)
+savePatternsToSvg('ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
+savePatternsToSvg('ames_RightWall', ames2D_xOy_RightWallPatterns)
+savePatternsToSvg('ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
+
+savePatternsToSvg('base_Floor',     room2D_xOy_FloorPatterns)
+savePatternsToSvg('base_Ceil',      room2D_xOy_CeilPatterns)
+savePatternsToSvg('base_LeftWall',  room2D_xOy_LeftWallPatterns)
+savePatternsToSvg('base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
+savePatternsToSvg('base_FrontWall', room2D_xOy_FrontWallPatterns)
+
+print("Done. Use *.svg files in the script directory")
