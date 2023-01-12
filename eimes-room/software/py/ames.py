@@ -65,6 +65,16 @@ G = [E[0] + WIDTH,  E[1],           E[2] + DEPTH]
 # Также не проверяется видимость всей комнаты из точки V (проверяйте сами)
 
 # На стенах, полу и потолке комнаты могут быть линейные узоры.
+
+# На ближней стороне пола, потолка, левой и правой стен будем добавлять
+# треугольную маркировку точки зрения V (чтобы не запутаться). 
+# Это тоже будет узор (как будто маркировка сделана прямо на стенах 
+# комнаты). Цвет и размеры этой маркировки:
+
+MARK_COLOR  = "lawngreen"
+MARK_WIDTH  = 8 # миллиметры
+MARK_HEIGHT = 10 
+
 # Элемент узора (например, одна кафельная плитка на полу) в этой программе 
 # представляет собой замкнутую фигуру из нескольких 2D или 3D точек (хранимых списком), 
 # лежащих в одной плоскости, залитую одним цветом:
@@ -125,6 +135,16 @@ def generatePatternsChessFloor():
         x = x + w
         ix = ix + 1
 
+    # Добавим треугольную маркировку центра точки зрения
+    patterns.append(Pattern(
+        MARK_COLOR,
+        [
+            [V[0] - MARK_WIDTH/2, E[1], E[2] + MARK_HEIGHT],
+            [V[0] + MARK_WIDTH/2, E[1], E[2] + MARK_HEIGHT],
+            [V[0],                E[1], E[2]]
+        ]
+    ))
+
     return patterns
 
 # На потолке будет пять квадратных светильников (четыре по краям, один большой в центре)
@@ -164,6 +184,16 @@ def generatePatternsCeil():
             [x + w, A[1], z - w],
         ]))
 
+    # Добавим треугольную маркировку центра точки зрения
+    patterns.append(Pattern(
+        MARK_COLOR,
+        [
+            [V[0] - MARK_WIDTH/2, A[1], A[2] + MARK_HEIGHT],
+            [V[0] + MARK_WIDTH/2, A[1], A[2] + MARK_HEIGHT],
+            [V[0],                A[1], A[2]]
+        ]
+    ))
+
     return patterns
 
 # На всех стенах есть фартук:
@@ -197,6 +227,16 @@ def generatePatternsLeftWall():
             [F[0], F[1] + DOOR_HEIGHT,  F[2] - 2*DOOR_WIDTH],
             [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH]
         ]))
+
+    # Добавим треугольную маркировку центра точки зрения
+    patterns.append(Pattern(
+        MARK_COLOR,
+        [
+            [E[0], V[1] - MARK_WIDTH/2, E[2] + MARK_HEIGHT],
+            [E[0], V[1] + MARK_WIDTH/2, E[2] + MARK_HEIGHT],
+            [E[0], V[1],                E[2]]
+        ]
+    ))
 
     return patterns
 
@@ -244,6 +284,16 @@ def generatePatternsRightWall():
             [G[0], y + PICTURE_HEIGHT/2, z + PICTURE_WIDTH/2],
             [G[0], y + PICTURE_HEIGHT/2, z - PICTURE_WIDTH/2]
         ]))
+
+    # Добавим треугольную маркировку центра точки зрения
+    patterns.append(Pattern(
+        MARK_COLOR,
+        [
+            [H[0], V[1] - MARK_WIDTH/2, H[2] + MARK_HEIGHT],
+            [H[0], V[1] + MARK_WIDTH/2, H[2] + MARK_HEIGHT],
+            [H[0], V[1],                H[2]]
+        ]
+    ))
 
     return patterns
 
@@ -572,20 +622,38 @@ def SVG_POLYGON_FROM_PATTERN(pattern:Pattern):
 
     return '<polygon points="{0}" fill="{1}"/>'.format(pointsStr, pattern.color)
 
-def SVG_FOR_PATTERNS(pattarns:list[Pattern]):
-    xMin, yMin, w, h = patternsArea2D_xOy(pattarns)
+def SVG_POLYLINE_FROM_PATTERN(pattern:Pattern):
+    pointsStr = ""
+    for point in pattern.points:
+        x, y = point[0], point[1]
+        if len(pointsStr) == 0:
+            pointsStr = pointsStr + '{0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
+        else:
+            pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
+
+    # добавляем последнюю точку, чтобы провести замкнутую линию
+    point = pattern.points[0]
+    x, y = point[0], point[1]
+    pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
+
+    return '<polyline points="{0}" stroke="black" stroke-width="1px" stroke-opacity="0.3" fill="none"/>'.format(pointsStr)
+
+def SVG_FOR_PATTERNS(patterns:list[Pattern]):
+    xMin, yMin, w, h = patternsArea2D_xOy(patterns)
     viewBox = '{} {} {} {}'.format(svgFormatInViewPort(xMin), svgFormatInViewPort(yMin), svgFormatInViewPort(w), svgFormatInViewPort(h))
 
     str = SVG_HEAD(svgFormatInMm(w), svgFormatInMm(h), viewBox)
-    for pattern in pattarns:
+    for pattern in patterns:
         str = str + "\n" + SVG_POLYGON_FROM_PATTERN(pattern)
+
+    str = str + "\n" + SVG_POLYLINE_FROM_PATTERN(patterns[0])
 
     str = str + SVG_TAIL()
 
     return str
 
-#TODO: добавить марку точки просмотра (зеленый треугольник), а то хз как склеить
-# добавить границу на первом элементе массива узоров: stroke="black" stroke-width="1px"
-# границ не видно из за точного совпадения вьюпорта с вьюбоксом - надо чутка увеличить ширину и высоту
-# ну, и сделать сохранение в файл
-print(SVG_FOR_PATTERNS(room2D_xOy_FloorPatterns))
+
+# TODO: сделать сохранение в файл
+# TODO: изображение на плоскости нужно отражать по Y (т.к. в компьютерных координатах oY идет вниз )
+# TODO: на некоторые выкройки мы смотрим (с другой стороны "прозрачной" стены)
+print(SVG_FOR_PATTERNS(ames2D_xOy_FloorPatterns))
