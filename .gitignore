@@ -1,3 +1,5 @@
 *.pdf
 *.gz
 /casting-net/beamer/figs
+eimes-room/software/py/*.svg
+eimes-room/software/py/output/*.svg

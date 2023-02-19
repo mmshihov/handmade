@@ -79,12 +79,11 @@ MARK_HEIGHT = 10
 # представляет собой замкнутую фигуру из нескольких 2D или 3D точек (хранимых списком), 
 # лежащих в одной плоскости, залитую одним цветом:
 
-from dataclasses import dataclass
-
-@dataclass
 class Pattern:
-    color: str
-    points: list[list[float]]
+    def __init__(self, color: str, points: list[list[float]]):
+        self.color = color
+        self.points = points
+
 
 # Так как каждый элемент узора (все его точки) будет испытывать одни и те же
 # линейные преобразования, то будем обрабатывать сразу массивы таких элементов.
@@ -682,16 +681,16 @@ def mirrorOy(patterns: list[Pattern]):
 
 # Сохраняем узоры в SVG (ищите файлы там же, где лежит скрипт).
 # Часть узоров делаем в отражении (научный тык).
-savePatternsToSvg('ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
-savePatternsToSvg('ames_Ceil',      ames2D_xOy_CeilPatterns)
-savePatternsToSvg('ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
-savePatternsToSvg('ames_RightWall', ames2D_xOy_RightWallPatterns)
-savePatternsToSvg('ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
+savePatternsToSvg('output/ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
+savePatternsToSvg('output/ames_Ceil',      ames2D_xOy_CeilPatterns)
+savePatternsToSvg('output/ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
+savePatternsToSvg('output/ames_RightWall', ames2D_xOy_RightWallPatterns)
+savePatternsToSvg('output/ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
 
-savePatternsToSvg('base_Floor',     room2D_xOy_FloorPatterns)
-savePatternsToSvg('base_Ceil',      room2D_xOy_CeilPatterns)
-savePatternsToSvg('base_LeftWall',  room2D_xOy_LeftWallPatterns)
-savePatternsToSvg('base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
-savePatternsToSvg('base_FrontWall', room2D_xOy_FrontWallPatterns)
+savePatternsToSvg('output/base_Floor',     room2D_xOy_FloorPatterns)
+savePatternsToSvg('output/base_Ceil',      room2D_xOy_CeilPatterns)
+savePatternsToSvg('output/base_LeftWall',  room2D_xOy_LeftWallPatterns)
+savePatternsToSvg('output/base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
+savePatternsToSvg('output/base_FrontWall', room2D_xOy_FrontWallPatterns)
 
 print("Done. Use *.svg files in the script directory")
