@@ -4,7 +4,7 @@
 
 # Обозначения элементов комнаты Эймса 
 # возьмем как на рисунке:
-# "../../../eimes-room/beamer/figs/ames-only.png" 
+# "../../../eimes-room/beamer/figs/ames-xyz.png" 
 # 
 # Обозначения углов комнаты:
 #   E = левый--нижний--ближний
@@ -679,7 +679,7 @@ def mirrorOy(patterns: list[Pattern]):
             [ 0, 0, 1] ]
     return patternsMulMatrix3D(patterns, m)
 
-# Сохраняем узоры в SVG (ищите файлы там же, где лежит скрипт).
+# Сохраняем узоры в SVG (ищите файлы в папке "output", там же, где лежит скрипт).
 # Часть узоров делаем в отражении (научный тык).
 savePatternsToSvg('output/ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
 savePatternsToSvg('output/ames_Ceil',      ames2D_xOy_CeilPatterns)

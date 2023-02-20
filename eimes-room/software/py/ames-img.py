@@ -1,10 +1,11 @@
-# Это программа-генератор выкроек стен, потолка и пола комнаты Эймса. 
-# Выкройки будут генерироваться в векторном формате SVG
-# Бери, печатай, вырезай, клей.
+# Это программа-генератор искаженных картинок на стенах, потолке и поле комнаты Эймса.
+# Она сделана на основе программы ames.py, расположенной в том же каталоге. Тут 
+# комментариев будет минимум, за подробностями обращайтесь к комментариям ames.py. 
+# Их там больше, чем надо.
 
 # Обозначения элементов комнаты Эймса 
 # возьмем как на рисунке:
-# "../../../eimes-room/beamer/figs/ames-only.png" 
+# "../../../eimes-room/beamer/figs/ames-xyz.png" 
 # 
 # Обозначения углов комнаты:
 #   E = левый--нижний--ближний
@@ -29,7 +30,7 @@
 # Двумерные (для выкроек стен, потолка и пола комнаты) --- списком из двух чисел.
 # 3D точка: [x, y, z], 2D: [x, y].
 # Измерения: x - ширина (право-лево), y - высота (верх-низ), z - глубина (вблизи-вдали)
-# Измеряем всё в миллиметрах! 
+# Измеряем всё в миллиметрах!
 
 # Программа не проверяет влезет ли выкройка на A4-й лист бумаги --- подгоняйте сами.
 
@@ -64,272 +65,44 @@ G = [E[0] + WIDTH,  E[1],           E[2] + DEPTH]
 
 # Также не проверяется видимость всей комнаты из точки V (проверяйте сами)
 
-# На стенах, полу и потолке комнаты могут быть линейные узоры.
-
-# На ближней стороне пола, потолка, левой и правой стен будем добавлять
-# треугольную маркировку точки зрения V (чтобы не запутаться). 
-# Это тоже будет узор (как будто маркировка сделана прямо на стенах 
-# комнаты). Цвет и размеры этой маркировки:
-
-MARK_COLOR  = "lawngreen"
-MARK_WIDTH  = 8 # миллиметры
-MARK_HEIGHT = 10 
-
-# Элемент узора (например, одна кафельная плитка на полу) в этой программе 
+# Элемент узора (на который будет "натягиваться" картинка) в этой программе 
 # представляет собой замкнутую фигуру из нескольких 2D или 3D точек (хранимых списком), 
-# лежащих в одной плоскости, залитую одним цветом:
+# лежащих в одной плоскости:
 
 class Pattern:
-    def __init__(self, color: str, points: list[list[float]]):
-        self.color = color
+    # picturePath - путь к картинке
+    # points - точки
+    def __init__(self, picturePath: str, points: list[list[float]]):
+        self.picturePath = picturePath
         self.points = points
 
 
-# Так как каждый элемент узора (все его точки) будет испытывать одни и те же
-# линейные преобразования, то будем обрабатывать сразу массивы таких элементов.
-
 # Определим несколько функций для генерации узоров комнаты:
 
-# создаем пол в шахматную клеточку (выложен плиткой)
-def generatePatternsChessFloor(): 
-    FIELD_COUNT_ON_WIDTH = 10
-    COLORS = ["black", "white"]
+# пол
+def generatePatternsFloor(): 
+    return []
 
-    w = (G[0] - F[0]) / FIELD_COUNT_ON_WIDTH # плитка квадратная, размером w*w
-        
-    x = F[0] # начинаем генерировать клеточки с левого-нижнего-дальнего угла
-    z = F[2] # x, z --- координаты одного из уголоков плитки
-    ix = iz = 0 # номер плитки по ширине и глубине (двумерный массив плиток)
-                # для определения того, каким цветом красить плитку 
-                # в шахматку ((ix+iy) mod COLORS.COUNT)
-    patterns = [Pattern("white", [E, F, G, H])] # первым элементом списка будет весь пол
-    # а только потом --- плитки:
-    while (x < G[0]):
-        z = F[2]
-        iz = 0
-        while (z > E[2]):
-            # может быть последние плитки будут не целыми, поэтому определяем 
-            # ширину и глубину конкретной плитки:
-            wx = wz = w
-            if (x + wx > G[0]):
-                wx = G[0] - x
-            if (z - wz < E[2]):
-                wz = z - E[2]
-
-            color = COLORS[(ix + iz) % len(COLORS)] # определяем цвет добавляемой плитки
-
-            # добавляем плитку в масссив узоров
-            patterns.append(Pattern( # создаем узор плитки, указывая:
-                color,  # цвет плитки
-                [       # координаты точек плитки, лежащей на полу (плоскость xOz):
-                    [x,         E[1],   z],
-                    [x + wx,    E[1],   z],
-                    [x + wx,    E[1],   z - wz],
-                    [x,         E[1],   z - wz]
-                ]
-            ))
-
-            z = z - w
-            iz = iz + 1
-        x = x + w
-        ix = ix + 1
-
-    # Добавим треугольную маркировку центра точки зрения
-    patterns.append(Pattern(
-        MARK_COLOR,
-        [
-            [V[0] - MARK_WIDTH/2, E[1], E[2] + MARK_HEIGHT],
-            [V[0] + MARK_WIDTH/2, E[1], E[2] + MARK_HEIGHT],
-            [V[0],                E[1], E[2]]
-        ]
-    ))
-
-    return patterns
-
-# На потолке будет пять квадратных светильников (четыре по краям, один большой в центре)
+# потолок
 def generatePatternsCeil():
-    LIGHT_DIMENSION_PER_WIDTH = 10 # сколько светильников помещается по ширине (минимум)
-    COLOR = "blue"
+    return [] # todo: светильники можно сделать катринками
 
-    wx = (C[0] - B[0]) / LIGHT_DIMENSION_PER_WIDTH # размер светильника по ширине
-    wz = (B[2] - A[2]) / LIGHT_DIMENSION_PER_WIDTH # размер светильника по глубине
-
-    w = wx
-    if (wz < w): w = wz
-
-    patterns = [Pattern("white", [A, B, C, D])] # первым элементом списка будет весь потолок
-
-    # светильники:
-    x = B[0] + w;  z = B[2] - 2*w       # левый-дальний
-    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
-
-    x = B[0] + w;  z = A[2] + w         # левый-ближний
-    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
-
-    x = C[0] - 2*w;  z = C[2] - 2*w     # правый-дальний
-    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
-
-    x = C[0] - 2*w;  z = D[2] + w       # правый-ближний
-    patterns.append(Pattern(COLOR,[ [x, A[1], z], [x + w, A[1], z], [x + w, A[1], z + w], [x, A[1], z + w]]))
-
-    # центральный (больше остальных в два раза линейно)
-    x = (B[0] + C[0]) / 2;  z = (A[2] + B[2]) / 2
-    patterns.append(Pattern(
-        COLOR,
-        [
-            [x - w, A[1], z - w],
-            [x - w, A[1], z + w],
-            [x + w, A[1], z + w],
-            [x + w, A[1], z - w],
-        ]))
-
-    # Добавим треугольную маркировку центра точки зрения
-    patterns.append(Pattern(
-        MARK_COLOR,
-        [
-            [V[0] - MARK_WIDTH/2, A[1], A[2] + MARK_HEIGHT],
-            [V[0] + MARK_WIDTH/2, A[1], A[2] + MARK_HEIGHT],
-            [V[0],                A[1], A[2]]
-        ]
-    ))
-
-    return patterns
-
-# На всех стенах есть фартук:
-BORDER_HEIGHT = HEIGHT / 2
-BORDER_COLOR  = "green"
-
-# левая стена с дверью
+# левая стена
 def generatePatternsLeftWall():
-    DOOR_HEIGHT = HEIGHT * 4 / 5
-    DOOR_WIDTH  = DOOR_HEIGHT / 3
-    DOOR_COLOR = "grey"
+    return [] # todo: двери, картины можно сделать картинками
 
-    patterns = [Pattern("white", [E, A, B, F])] # стена целиком
-
-    # фартук
-    patterns.append(Pattern(
-        BORDER_COLOR,
-        [
-            E,
-            [E[0], E[1] + BORDER_HEIGHT, E[2]],
-            [F[0], F[1] + BORDER_HEIGHT, F[2]],
-            F
-        ]))
-    
-    # дверь
-    patterns.append(Pattern(
-        DOOR_COLOR,
-        [
-            [F[0], F[1],                F[2] - DOOR_WIDTH/2],
-            [F[0], F[1],                F[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
-            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
-            [F[0], F[1] + DOOR_HEIGHT,  F[2] - DOOR_WIDTH/2]
-        ]))
-
-    # Добавим треугольную маркировку центра точки зрения
-    patterns.append(Pattern(
-        MARK_COLOR,
-        [
-            [E[0], V[1] - MARK_WIDTH/2, E[2] + MARK_HEIGHT],
-            [E[0], V[1] + MARK_WIDTH/2, E[2] + MARK_HEIGHT],
-            [E[0], V[1],                E[2]]
-        ]
-    ))
-
-    return patterns
-
-
-# правая стена с такой же дверью и картиной
+# правая стена
 def generatePatternsRightWall():
-    DOOR_HEIGHT = HEIGHT * 4 / 5
-    DOOR_WIDTH  = DOOR_HEIGHT / 3
-    DOOR_COLOR = "grey"
+    return [] # todo: двери, картины можно сделать картинками
 
-    PICTURE_HEIGHT = HEIGHT / 4
-    PICTURE_WIDTH  = DEPTH / 4
-    PICTURE_COLOR = "blue"
-    
-    patterns = [Pattern("white", [H, D, C, G])] # стена целиком
-
-    # фартук
-    patterns.append(Pattern(
-        BORDER_COLOR,
-        [
-            H,
-            [H[0], H[1] + BORDER_HEIGHT, H[2]],
-            [G[0], G[1] + BORDER_HEIGHT, G[2]],
-            G
-        ]))
-    
-    # дверь
-    patterns.append(Pattern(
-        DOOR_COLOR,
-        [
-            [G[0], G[1],                G[2] - DOOR_WIDTH/2],
-            [G[0], G[1],                G[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
-            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH/2 - DOOR_WIDTH],
-            [G[0], G[1] + DOOR_HEIGHT,  G[2] - DOOR_WIDTH/2]
-        ]))
-
-    # картина по центру стены
-    y = (C[1] + G[1])/2
-    z = (H[2] + G[2])/2
-    patterns.append(Pattern(
-        PICTURE_COLOR,
-        [
-            [G[0], y - PICTURE_HEIGHT/2, z - PICTURE_WIDTH/2],
-            [G[0], y - PICTURE_HEIGHT/2, z + PICTURE_WIDTH/2],
-            [G[0], y + PICTURE_HEIGHT/2, z + PICTURE_WIDTH/2],
-            [G[0], y + PICTURE_HEIGHT/2, z - PICTURE_WIDTH/2]
-        ]))
-
-    # Добавим треугольную маркировку центра точки зрения
-    patterns.append(Pattern(
-        MARK_COLOR,
-        [
-            [H[0], V[1] - MARK_WIDTH/2, H[2] + MARK_HEIGHT],
-            [H[0], V[1] + MARK_WIDTH/2, H[2] + MARK_HEIGHT],
-            [H[0], V[1],                H[2]]
-        ]
-    ))
-
-    return patterns
-
-# дальняя стена с камином или картиной по центру
+# дальняя стена
 def generatePatternsFrontWall():
-    PICTURE_HEIGHT = HEIGHT / 2
-    PICTURE_WIDTH  = WIDTH / 2
-    PICTURE_COLOR = "blue"
-    
-    patterns = [Pattern("white", [B, C, G, F])] # стена целиком
-
-    # фартук
-    patterns.append(Pattern(
-        BORDER_COLOR,
-        [
-            F,
-            [F[0], F[1] + BORDER_HEIGHT, F[2]],
-            [G[0], G[1] + BORDER_HEIGHT, G[2]],
-            G
-        ]))
-
-    # картина по центру стены
-    x = (F[0] + G[0])/2
-    y = (F[1] + B[1])/2
-    patterns.append(Pattern(
-        PICTURE_COLOR,
-        [
-            [x - PICTURE_WIDTH/2, y - PICTURE_HEIGHT/2, F[2]],
-            [x + PICTURE_WIDTH/2, y - PICTURE_HEIGHT/2, F[2]],
-            [x + PICTURE_WIDTH/2, y + PICTURE_HEIGHT/2, F[2]],
-            [x - PICTURE_WIDTH/2, y + PICTURE_HEIGHT/2, F[2]]
-        ]))
-
+    # камин
+    patterns = [Pattern("input/pictures/camin-1.png", [B, C, G, F])] # TODO: пока на стену целиком
     return patterns
 
 # сохраняем узоры в соответствующих переменных:
-floorPatterns       = generatePatternsChessFloor()
+floorPatterns       = generatePatternsFloor()
 ceilPatterns        = generatePatternsCeil()
 leftWallPatterns    = generatePatternsLeftWall()
 rightWallPatterns   = generatePatternsRightWall()
@@ -439,7 +212,7 @@ def patternsProjection(patterns:list[Pattern], plane:Plane3D):
         points = []
         for point in pattern.points:
             points.append(viewProjectionPointOnPlane(point, plane)) # спроецировали каждую точку
-        projections.append(Pattern(pattern.color, points))
+        projections.append(Pattern(pattern.picturePath, points))
     return projections
 
 # Находим проекции узоров
@@ -479,7 +252,7 @@ def matrixMulMatrix3D(m1,m2):
     return r
 
 # достанем функцию квадратного корня из пакета math
-from math import sqrt;
+from math import sqrt
 
 # Определим функию поворота произвольно расположенной плоскости 
 # так, чтобы она стала параллельной плоскости xOy. 
@@ -505,7 +278,13 @@ def matrixFor2D_xOy(plane:Plane3D):
         [ 0, 0, 1]
     ]
 
-    # повернули исходный вектор нормали (y - составляющая == 0)
+    rm1_rev = [ # так выглядит обратная матрица поворота вокруг Oz
+        [ c, s, 0],
+        [-s, c, 0],
+        [ 0, 0, 1]
+    ]
+
+    # повернули исходный вектор нормали (y - составляющая == const)
     newABC = vectorMulMatrix3D(plane.ABC, rm1)
 
     # синус и косинус угла поворота вокруг Oy
@@ -518,8 +297,26 @@ def matrixFor2D_xOy(plane:Plane3D):
         [-s, 0, c]
     ]
 
-    return matrixMulMatrix3D(rm1, rm2)  # два поворота в одной матрице!!!
-                                        # (v*rm1)*rm2 == v*(rm1*rm2)
+    rm2_rev = [ # матрица обратног поворота вокруг Oy
+        [ c, 0,-s],
+        [ 0, 1, 0],
+        [ s, 0, c]
+    ]
+
+    # Умножение матриц ассоциативно, но некоммутативно. Поэтому,
+    # перемножая матрицы, получим сразу матрицу двух поворотов!!!
+    # (v*rm1)*rm2 == v*(rm1*rm2)
+    # M = rm1*rm2
+
+    # также вернем матирцу обратного двойного поворота: 
+    # M_rev = rm2_rev*rm1_rev
+    # т.к.: rm1*rm1_rev = E
+    #    и: rm2*rm2_rev = E
+    # То:
+    #   M*M_rev = (rm1*rm2)*(rm2_rev*rm1_rev) = rm1*rm2*rm2_rev*rm1_rev =
+    #   = rm1*(rm2*rm2_rev)*rm1_rev = rm1*E*rm1_rev = rm1*rm1_rev = E
+    return (matrixMulMatrix3D(rm1, rm2), matrixMulMatrix3D(rm2_rev, rm1_rev))
+                                        
 
 # Определим функцию, которая преобразует точки массива узоров, 
 # умножая их на матрицу m (с помощью матриц можно, например,
@@ -577,87 +374,6 @@ def patternsArea2D_xOy(patterns: list[Pattern]):
     
     return (xMin, yMin, xMax - xMin, yMax - yMin)
 
-# Формируем SVG-файл. Он текстовый, его можно читать человеку и даже понимать, 
-# что там нарисовано. Определим вспомогательные функции для формирования
-# текстовых элементов SVG файла.
-
-# Все наши измерения в миллиметрах, к счастью SVG работает с милиметрами 
-# (и не только). Но по умолчанию он работает с пикселами. Т.е., если для 
-# координаты или размерности указано число, то это будет трактоваться 
-# как количество пикселей. Чтобы работать в миллиметрах, нужно указывать
-# постфикс "mm". Например, "height=100mm". Напишем функцию, форматирующую 
-# наше число в правильную SVG-шную строку
-def svgFormatInMm(digit):
-    return "{:.2f}mm".format(digit)
-
-def svgFormatInViewPort(digit):
-    return "{:.2f}".format(digit)
-
-
-# Открывающий тэг заголовка SVG-файла "<svg ...>"" 
-# Имеет парную закрывающую часть "</svg>"
-# Между открывающей и закрывающей частями будут находится команды рисования
-def SVG_HEAD(width, height, viewBox): 
-    # в питоне вот так можно в тройных кавычках писать многострочный текст:
-    return '''\
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg version="1.1"
-     width="{0}" 
-     height="{1}"
-     viewBox="{2}"
-     preserveAspectRatio="none"
-     xmlns="http://www.w3.org/2000/svg">
-'''.format(width, height, viewBox)
-
-def SVG_TAIL():
-    return '</svg>'
-
-def SVG_POLYGON_FROM_PATTERN(pattern:Pattern):
-    pointsStr = ""
-    for point in pattern.points:
-        x, y = point[0], point[1]
-        if len(pointsStr) == 0:
-            pointsStr = pointsStr + '{0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
-        else:
-            pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
-
-    return '<polygon points="{0}" fill="{1}"/>'.format(pointsStr, pattern.color)
-
-def SVG_POLYLINE_FROM_PATTERN(pattern:Pattern):
-    pointsStr = ""
-    for point in pattern.points:
-        x, y = point[0], point[1]
-        if len(pointsStr) == 0:
-            pointsStr = pointsStr + '{0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
-        else:
-            pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
-
-    # добавляем последнюю точку, чтобы провести замкнутую линию
-    point = pattern.points[0]
-    x, y = point[0], point[1]
-    pointsStr = pointsStr + ' {0},{1}'.format(svgFormatInViewPort(x), svgFormatInViewPort(y))
-
-    return '<polyline points="{0}" stroke="black" stroke-width="1px" stroke-opacity="0.3" fill="none"/>'.format(pointsStr)
-
-def SVG_FOR_PATTERNS(patterns:list[Pattern]):
-    xMin, yMin, w, h = patternsArea2D_xOy(patterns)
-    viewBox = '{} {} {} {}'.format(svgFormatInViewPort(xMin), svgFormatInViewPort(yMin), svgFormatInViewPort(w), svgFormatInViewPort(h))
-
-    str = SVG_HEAD(svgFormatInMm(w), svgFormatInMm(h), viewBox)
-    for pattern in patterns:
-        str = str + "\n" + SVG_POLYGON_FROM_PATTERN(pattern)
-
-    str = str + "\n" + SVG_POLYLINE_FROM_PATTERN(patterns[0])
-
-    str = str + SVG_TAIL()
-
-    return str
-
-# Сохраняем массив 2D узоров файл (в том же каталоге, что и скрипт)
-def savePatternsToSvg(fileName:str, patterns:list[Pattern]):
-    file = open('{}.svg'.format(fileName), mode='wt', encoding='utf-8')
-    file.write(SVG_FOR_PATTERNS(patterns))
-    file.close()
 
 # Так как мы формировали узор в комнате, как бы смотря "изнутри", то 
 # получается, что на проекции (которая по вектору одного направления) 
@@ -679,18 +395,4 @@ def mirrorOy(patterns: list[Pattern]):
             [ 0, 0, 1] ]
     return patternsMulMatrix3D(patterns, m)
 
-# Сохраняем узоры в SVG (ищите файлы там же, где лежит скрипт).
-# Часть узоров делаем в отражении (научный тык).
-savePatternsToSvg('output/ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
-savePatternsToSvg('output/ames_Ceil',      ames2D_xOy_CeilPatterns)
-savePatternsToSvg('output/ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
-savePatternsToSvg('output/ames_RightWall', ames2D_xOy_RightWallPatterns)
-savePatternsToSvg('output/ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
-
-savePatternsToSvg('output/base_Floor',     room2D_xOy_FloorPatterns)
-savePatternsToSvg('output/base_Ceil',      room2D_xOy_CeilPatterns)
-savePatternsToSvg('output/base_LeftWall',  room2D_xOy_LeftWallPatterns)
-savePatternsToSvg('output/base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
-savePatternsToSvg('output/base_FrontWall', room2D_xOy_FrontWallPatterns)
-
-print("Done. Use *.svg files in the script directory")
+print("Done. Use images files in the 'output' directory")
