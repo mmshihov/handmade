@@ -395,4 +395,49 @@ def mirrorOy(patterns: list[Pattern]):
             [ 0, 0, 1] ]
     return patternsMulMatrix3D(patterns, m)
 
+# точки узора должны образовывать выпуклый многоугольник
+def isPointInPattern_xOy(point: list[float], pattern: Pattern):
+    pointsCount = len(pattern.points)
+    if pointsCount < 3:
+        return False
+
+    i = 0
+    while i < pointsCount:
+        
+        # выберем две точки i-й стороны
+        (x1, y1) = (pattern.points[i][0], pattern.points[i][1])
+
+        (x2, y2) = (pattern.points[0][0], pattern.points[0][1])
+        if i + 1 < pointsCount:
+            (x2, y2) = (pattern.points[i+1][0], pattern.points[i+1][1])
+
+        # быстренько определим критерий проверки, чтобы не писать лишнего
+        side = lambda x, y: (x-x1)*(y2-y1) - (y-y1)*(x2-x1)
+
+        # проверим, что все остальные точки узора, а также проверяемая точка 
+        # находятся с одной стороны относительно i-й стороны ((x1,y1), (x2,y2))
+        sidePos = sideNeg = 0
+        j = 0
+        while j < pointsCount:
+            if not ( (j == i) or (j == i + 1) or ((i + 1 >= pointsCount) and j == 0) ):
+                sideVal = side(pattern.points[j][0], pattern.points[j][1])
+                if sideVal < 0: 
+                    sideNeg = sideNeg + 1
+                elif sideVal > 0:
+                    sidePos = sidePos + 1
+            j = j + 1
+
+        sideVal = side(point[0], point[1])
+        if sideVal < 0: 
+            sideNeg = sideNeg + 1
+        elif sideVal > 0:
+            sidePos = sidePos + 1
+
+        if (sideNeg != 0) and (sidePos != 0):
+            return False
+
+        i = i + 1
+
+    return True
+
 print("Done. Use images files in the 'output' directory")
