@@ -263,7 +263,7 @@ from math import sqrt
 # умножать любую 3D точку, лежащую в исходной плоскости и таким образом 
 # получать ее координаты на плоскости
 
-def matrixFor2D_xOy(plane:Plane3D):
+def matrixFor_XY(plane:Plane3D):
     # находим синус и косинус угла поворота вектора нормали плоскости вокруг оси
     # Oz (после поворота компонента y (plane.ABC[1]) вектора нормали должна стать 
     # нулевой)
@@ -318,59 +318,31 @@ def matrixFor2D_xOy(plane:Plane3D):
     return (matrixMulMatrix3D(rm1, rm2), matrixMulMatrix3D(rm2_rev, rm1_rev))
                                         
 
-# Определим функцию, которая преобразует точки массива узоров, 
-# умножая их на матрицу m (с помощью матриц можно, например,
-# вращать и отражать точки(вектора))
-def patternsMulMatrix3D(patterns:list[Pattern], m):
-    newPatterns = []
-    for pattern in patterns:
-        points = []
-        for point in pattern.points:
-            points.append(vectorMulMatrix3D(point, m)) # умножаем каждую точку
-        newPatterns.append(Pattern(pattern.color, points))
-    return newPatterns
+# Определим функцию, которая преобразует точки узора,
+# умножая каждую на матрицу m
+def patternMulMatrix3D(pattern: Pattern, m):
+    points = []
+    for point in pattern.points:
+        points.append(vectorMulMatrix3D(point, m))
+    return Pattern(pattern.picturePath, points)
 
-# Определим функцию, которая поворачивает массив узоров, которые лежат в
-# одной плоскости (аргумент plane)
-def patternsRotationFor2D_xOy(patterns:list[Pattern], plane:Plane3D):
-    return patternsMulMatrix3D(patterns, matrixFor2D_xOy(plane))
-
-# получили выкройки на плоскости (координаты z у всех точек выкройки для каждого 
-# узора в списке --- одинаковые)
-ames2D_xOy_FloorPatterns       = patternsRotationFor2D_xOy(amesFloorPatterns, amesFloor)
-ames2D_xOy_CeilPatterns        = patternsRotationFor2D_xOy(amesCeilPatterns, amesCeil)
-ames2D_xOy_LeftWallPatterns    = patternsRotationFor2D_xOy(amesLeftWallPatterns, amesLeftWall)
-ames2D_xOy_RightWallPatterns   = patternsRotationFor2D_xOy(amesRightWallPatterns, amesRightWall)
-ames2D_xOy_FrontWallPatterns   = patternsRotationFor2D_xOy(amesFrontWallPatterns, amesFrontWall)
-
-# сделаем также выкройки базовой комнаты (все, кроме дальней стены, которая и 
-# xOy, нужно будет повернуть):
-room2D_xOy_FloorPatterns       = patternsRotationFor2D_xOy(floorPatterns, Plane3D(E, F, G))
-room2D_xOy_CeilPatterns        = patternsRotationFor2D_xOy(ceilPatterns, Plane3D(A, B, D))
-room2D_xOy_LeftWallPatterns    = patternsRotationFor2D_xOy(leftWallPatterns, Plane3D(E, A, F))
-room2D_xOy_RightWallPatterns   = patternsRotationFor2D_xOy(rightWallPatterns, Plane3D(H, D, G))
-room2D_xOy_FrontWallPatterns   = frontWallPatterns
 
 # Определим функцию, возвращающую параметры прямогугольной области
-# (xMin, yMin, width, height), которая содержит все узоры в заданном массиве узоров
-# Функция работает с выкройкой (т.е. использует только координаты x,y трехмерной точки
-# [x,y,z])
-def patternsArea2D_xOy(patterns: list[Pattern]):
-    if (len(patterns) == 0):
-        raise ValueError("Пустые массивы узоров не принимаются!")
+# (xMin, yMin, width, height), которая содержит узор.
+# Функция работает с выкройкой (т.е. использует только координаты 
+# x,y трехмерной точки [x,y,z])
+def patternArea_XY(pattern: Pattern):
+    xMin = xMax = pattern.points[0][0]
+    yMin = yMax = pattern.points[0][1]
 
-    xMin = xMax = patterns[0].points[0][0]
-    yMin = yMax = patterns[0].points[0][1]
+    for point in pattern.points:
+        x = point[0]
+        if x < xMin: xMin = x
+        if x > xMax: xMax = x
 
-    for pattern in patterns:
-        for point in pattern.points:
-            x = point[0]
-            if x < xMin: xMin = x
-            if x > xMax: xMax = x
-
-            y = point[1]
-            if y < yMin: yMin = y
-            if y > yMax: yMax = y
+        y = point[1]
+        if y < yMin: yMin = y
+        if y > yMax: yMax = y
     
     return (xMin, yMin, xMax - xMin, yMax - yMin)
 
@@ -382,18 +354,18 @@ def patternsArea2D_xOy(patterns: list[Pattern]):
 # Поэтому определим несколько зеркально "отражащюих" функций:
 
 # отражение по xOz (y = -y)
-def mirrorOx(patterns: list[Pattern]):
+def mirrorOx(pattern: Pattern):
     m = [   [1, 0, 0], # это матрица отражения y = -y
             [0,-1, 0],
             [0, 0, 1] ]
-    return patternsMulMatrix3D(patterns, m)
+    return patternMulMatrix3D(pattern, m)
 
 # отражение по Oy (x = -x)
-def mirrorOy(patterns: list[Pattern]):
+def mirrorOy(pattern: Pattern):
     m = [   [-1, 0, 0],
             [ 0, 1, 0],
             [ 0, 0, 1] ]
-    return patternsMulMatrix3D(patterns, m)
+    return patternMulMatrix3D(pattern, m)
 
 # точки узора должны образовывать выпуклый многоугольник
 def isPointInPattern_xOy(point: list[float], pattern: Pattern):
@@ -403,15 +375,14 @@ def isPointInPattern_xOy(point: list[float], pattern: Pattern):
 
     i = 0
     while i < pointsCount:
-        
-        # выберем две точки i-й стороны
+        # выберем две точки i-й стороны: (i, i+1)
         (x1, y1) = (pattern.points[i][0], pattern.points[i][1])
 
         (x2, y2) = (pattern.points[0][0], pattern.points[0][1])
         if i + 1 < pointsCount:
             (x2, y2) = (pattern.points[i+1][0], pattern.points[i+1][1])
 
-        # быстренько определим критерий проверки, чтобы не писать лишнего
+        # критерий проверки, чтобы не писать лишнего
         side = lambda x, y: (x-x1)*(y2-y1) - (y-y1)*(x2-x1)
 
         # проверим, что все остальные точки узора, а также проверяемая точка 
@@ -440,4 +411,15 @@ def isPointInPattern_xOy(point: list[float], pattern: Pattern):
 
     return True
 
-print("Done. Use images files in the 'output' directory")
+
+def makePicture(basePattern, basePlane,  amesPattern, amesPlane):
+    mBase, mBase_rev = matrixFor_XY(basePlane)
+    basePatternXY = patternMulMatrix3D(basePattern, mBase)
+    baseX, baseY, baseLenX, baseLenY = patternArea_XY(basePatternXY)
+
+    mAmes, mAmes_rev = matrixFor_XY(amesPlane)
+    amesPatternXY = patternMulMatrix3D(amesPattern, mAmes)
+    amesX, amesY, amesLenX, amesLenY = patternArea_XY(amesPatternXY)
+    
+
+print("Done. Use image files in the 'output' directory")
