@@ -203,22 +203,19 @@ amesLeftWall   = Plane3D(amesA, amesB, amesF)
 def viewProjectionPointOnPlane(point, plane:Plane3D):
     return plane.intersectionPointWithLine(Line3D(V, point))
 
+# Определим функцию, которая проецирует узор на плоскость через точку зрения V
+def patternProjection(pattern: Pattern, plane:Plane3D):
+    points = []
+    for point in pattern.points:
+        points.append(viewProjectionPointOnPlane(point, plane)) # спроецировали каждую точку
+    return Pattern(pattern.picturePath, points)
+
 # Определим также функцию, которая проецирует целый массив узоров
 def patternsProjection(patterns:list[Pattern], plane:Plane3D):
     projections = []
     for pattern in patterns:
-        points = []
-        for point in pattern.points:
-            points.append(viewProjectionPointOnPlane(point, plane)) # спроецировали каждую точку
-        projections.append(Pattern(pattern.picturePath, points))
+        projections.append(patternProjection(pattern, plane))
     return projections
-
-# Находим проекции узоров
-amesFloorPatterns       = patternsProjection(floorPatterns, amesFloor)
-amesCeilPatterns        = patternsProjection(ceilPatterns, amesCeil)
-amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
-amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
-amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
 
 # Теперь проекции узоров нужно повернуть так, чтобы они "легли" например, на 
 # плоскость xOy (все узоры лежат в одной плоскости по определению). 
@@ -411,13 +408,25 @@ def isPointInPattern_XY(point: list[float], pattern: Pattern):
 
     return True
 
+# # Находим проекции узоров
+# amesFloorPatterns       = patternsProjection(floorPatterns, amesFloor)
+# amesCeilPatterns        = patternsProjection(ceilPatterns, amesCeil)
+# amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
+# amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
+# amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
 
-def makePicture(basePattern, basePlane,  amesPattern, amesPlane):
-    mBase, mBase_rev = matrixFor_XY(basePlane)
+
+# Функция, которая картинку базового узора (basePattern) "натягивает" 
+# на его проекцию на заданную плоскость amesPlane.
+# Базовый узор  должен лежать в плоскости basePlane (не проверяем это!).
+def makePicture(basePattern, basePlane, amesPlane):
+    amesPattern = patternProjection(basePattern, amesPlane)
+
+    mBase, = matrixFor_XY(basePlane)
     basePatternXY = patternMulMatrix3D(basePattern, mBase)
     baseX, baseY, baseLenX, baseLenY = patternArea_XY(basePatternXY)
 
-    # TODO: from pictrue
+    # TODO: взять размерности из картинки базового паттерна
     basePixelCountX = 100
     basePixelCountY = 100
 
@@ -431,12 +440,36 @@ def makePicture(basePattern, basePlane,  amesPattern, amesPlane):
     amesPixelCountX = (amesLenX * basePixelCountX) // baseLenX
     amesPixelCountY = (amesLenY * basePixelCountY) // baseLenY
 
+    # TODO: создаем картинку Эймса размерностью (amesPixelCountX, amesPixelCountY)
+
     # проходим по всем пикселям картинки Эймса
     amesPixelX = 0
     while amesPixelX < amesPixelCountX:
         amesPixelY = 0
         while amesPixelY < amesPixelCountY:
-            # масштабируем пиксел в координату на узоре Эймса
+            # масштабируем пиксел в координату на плоском узоре Эймса
+            amesPointXY = [
+                amesX + amesPixelX * amesLenX / amesPixelCountX,
+                amesY + amesPixelY * amesLenY / amesPixelCountY,
+                amesZ
+            ]
+
+            # проверяем попала ли точка в узор, чтобы не делать лишних вычислений:
+            if isPointInPattern_XY(amesPointXY, amesPatternXY):
+                # поворачиваем на исходную плоскость Эймса
+                amesPoint = vectorMulMatrix3D(amesPointXY, mAmes_rev)
+                basePoint = viewProjectionPointOnPlane(amesPoint, basePlane)
+                basePointXY = vectorMulMatrix3D(basePoint, mBase)
+
+                # возможно не попали внутрь базового узора:
+                if isPointInPattern_XY(basePointXY, basePatternXY):
+                    basePixelX = (basePointXY[0] - baseX) * basePixelCountX // baseLenX
+                    basePixelY = (basePointXY[1] - baseY) * basePixelCountY // baseLenY
+
+                    # пишем пиксел (basePixelX, basePixelY) исходной картинки в пиксел (amesPixelX, amesPixelY) Эймса
+                    continue
+
+            # print empty pixel to (amesPixelX, amesPixelY)
 
             amesPixelY = amesPixelY + 1
         amesPixelX = amesPixelX + 1
