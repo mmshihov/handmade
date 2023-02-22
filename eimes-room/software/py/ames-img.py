@@ -417,37 +417,28 @@ def makePicture(basePattern, basePlane,  amesPattern, amesPlane):
     basePatternXY = patternMulMatrix3D(basePattern, mBase)
     baseX, baseY, baseLenX, baseLenY = patternArea_XY(basePatternXY)
 
+    # TODO: from pictrue
+    basePixelCountX = 100
+    basePixelCountY = 100
+
     mAmes, mAmes_rev = matrixFor_XY(amesPlane)
     amesPatternXY = patternMulMatrix3D(amesPattern, mAmes)
     amesX, amesY, amesLenX, amesLenY = patternArea_XY(amesPatternXY)
+    amesZ = amesPatternXY.points[0][2]  # z координата (с индексом 2 в массиве) 
+                                        # у всех точек паттерна должна быть одинакова
 
+    # используем ту же плотность пикселей, что и в базовой картинке
+    amesPixelCountX = (amesLenX * basePixelCountX) // baseLenX
+    amesPixelCountY = (amesLenY * basePixelCountY) // baseLenY
 
-pattern = Pattern("foo", [
-    [ 0,  5,  0],
-    [ 4,  2,  0],
-    [ 2, -3,  0],
-    [-4,  1,  0],
-])
+    # проходим по всем пикселям картинки Эймса
+    amesPixelX = 0
+    while amesPixelX < amesPixelCountX:
+        amesPixelY = 0
+        while amesPixelY < amesPixelCountY:
+            # масштабируем пиксел в координату на узоре Эймса
 
-def isFalse(falseCondition, msg):
-    if not falseCondition:
-        print("OK")
-        return
-    print("FAIL: ", msg)
-
-def isTrue(trueCondition, msg):
-    if trueCondition:
-        print("OK")
-        return
-    print("FAIL: ", msg)
-
-isTrue( isPointInPattern_XY([ 1,  2,  0], pattern), "0")
-isTrue( isPointInPattern_XY([ 0,  0,  0], pattern), "1")
-isTrue( isPointInPattern_XY([-2,  1,  0], pattern), "2")
-isFalse(isPointInPattern_XY([-3,  3,  0], pattern), "3")
-isFalse(isPointInPattern_XY([ 2,  5,  0], pattern), "4")
-isFalse(isPointInPattern_XY([ 4,  0,  0], pattern), "5")
-isTrue (isPointInPattern_XY([-1,  3,  0], pattern), "6")
-isFalse(isPointInPattern_XY([-2, -2,  0], pattern), "7")
+            amesPixelY = amesPixelY + 1
+        amesPixelX = amesPixelX + 1
 
 print("Done. Use image files in the 'output' directory")
