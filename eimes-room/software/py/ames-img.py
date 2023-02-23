@@ -1,3 +1,7 @@
+import os
+from math import floor, sqrt
+from PIL import Image
+
 # Это программа-генератор искаженных картинок на стенах, потолке и поле комнаты Эймса.
 # Она сделана на основе программы ames.py, расположенной в том же каталоге.
 
@@ -205,10 +209,15 @@ def viewProjectionPointOnPlane(point, plane:Plane3D):
 
 # Определим функцию, которая проецирует узор на плоскость через точку зрения V
 def patternProjection(pattern: Pattern, plane:Plane3D):
+    newPicturePath = os.path.join(
+        os.path.dirname(pattern.picturePath), 
+        "ames_" + os.path.basename(pattern.picturePath))
+
     points = []
     for point in pattern.points:
         points.append(viewProjectionPointOnPlane(point, plane)) # спроецировали каждую точку
-    return Pattern(pattern.picturePath, points)
+
+    return Pattern(newPicturePath, points)
 
 # Определим также функцию, которая проецирует целый массив узоров
 def patternsProjection(patterns:list[Pattern], plane:Plane3D):
@@ -246,8 +255,6 @@ def matrixMulMatrix3D(m1,m2):
                 r[i][j] += m1[i][k]*m2[k][j]
     return r
 
-# достанем функцию квадратного корня из пакета math
-from math import sqrt
 
 # Определим функию поворота произвольно расположенной плоскости 
 # так, чтобы она стала параллельной плоскости xOy. 
@@ -264,8 +271,12 @@ def matrixFor_XY(plane:Plane3D):
     # находим синус и косинус угла поворота вектора нормали плоскости вокруг оси
     # Oz (после поворота компонента y (plane.ABC[1]) вектора нормали должна стать 
     # нулевой)
-    s = plane.ABC[1]/sqrt(plane.ABC[0]*plane.ABC[0] + plane.ABC[1]*plane.ABC[1])
-    c = plane.ABC[0]/sqrt(plane.ABC[0]*plane.ABC[0] + plane.ABC[1]*plane.ABC[1])
+    s = 0
+    c = 1
+    d = sqrt(plane.ABC[0]*plane.ABC[0] + plane.ABC[1]*plane.ABC[1])
+    if d != 0:
+        s = plane.ABC[1]/d
+        c = plane.ABC[0]/d
 
     rm1 = [ # так выглядит матрица поворота вокруг Oz
         [ c,-s, 0],
@@ -285,8 +296,12 @@ def matrixFor_XY(plane:Plane3D):
     newABC = vectorMulMatrix3D(plane.ABC, rm1)
 
     # синус и косинус угла поворота вокруг Oy
-    s = newABC[0]/sqrt(newABC[0]*newABC[0] + newABC[2]*newABC[2])
-    c = newABC[2]/sqrt(newABC[0]*newABC[0] + newABC[2]*newABC[2])
+    s = 0
+    c = 1
+    d = sqrt(newABC[0]*newABC[0] + newABC[2]*newABC[2])
+    if (d != 0):
+        s = newABC[0]/d
+        c = newABC[2]/d
 
     rm2 = [ # матрица поворота вокруг Oy
         [ c, 0, s],
@@ -344,26 +359,6 @@ def patternArea_XY(pattern: Pattern):
     return (xMin, yMin, xMax - xMin, yMax - yMin)
 
 
-# Так как мы формировали узор в комнате, как бы смотря "изнутри", то 
-# получается, что на проекции (которая по вектору одного направления) 
-# мы как бы смотрим на узор стены "снаружи" комнаты). 
-# Поэтому часть узоров нужно печатать в отражении.
-# Поэтому определим несколько зеркально "отражащюих" функций:
-
-# отражение по xOz (y = -y)
-def mirrorOx(pattern: Pattern):
-    m = [   [1, 0, 0], # это матрица отражения y = -y
-            [0,-1, 0],
-            [0, 0, 1] ]
-    return patternMulMatrix3D(pattern, m)
-
-# отражение по Oy (x = -x)
-def mirrorOy(pattern: Pattern):
-    m = [   [-1, 0, 0],
-            [ 0, 1, 0],
-            [ 0, 0, 1] ]
-    return patternMulMatrix3D(pattern, m)
-
 # точки узора должны образовывать выпуклый многоугольник
 def isPointInPattern_XY(point: list[float], pattern: Pattern):
     pointsCount = len(pattern.points)
@@ -408,27 +403,25 @@ def isPointInPattern_XY(point: list[float], pattern: Pattern):
 
     return True
 
-# # Находим проекции узоров
-# amesFloorPatterns       = patternsProjection(floorPatterns, amesFloor)
-# amesCeilPatterns        = patternsProjection(ceilPatterns, amesCeil)
-# amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
-# amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
-# amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
-
 
 # Функция, которая картинку базового узора (basePattern) "натягивает" 
 # на его проекцию на заданную плоскость amesPlane.
 # Базовый узор  должен лежать в плоскости basePlane (не проверяем это!).
-def makePicture(basePattern, basePlane, amesPlane):
+def makePicture(basePattern: Pattern, basePlane, amesPlane):
     amesPattern = patternProjection(basePattern, amesPlane)
 
-    mBase, = matrixFor_XY(basePlane)
+    mBase,_ = matrixFor_XY(basePlane)
+    m = [   [ 1, 0, 0],
+            [ 0,-1, 0],
+            [ 0, 0, 1] ]
+    mBase = matrixMulMatrix3D(mBase, m)
+
     basePatternXY = patternMulMatrix3D(basePattern, mBase)
     baseX, baseY, baseLenX, baseLenY = patternArea_XY(basePatternXY)
 
-    # TODO: взять размерности из картинки базового паттерна
-    basePixelCountX = 100
-    basePixelCountY = 100
+    # используем библтотеку Pillow для работы с изображениями
+    baseIm = Image.open(basePattern.picturePath)
+    (basePixelCountX, basePixelCountY) = baseIm.size
 
     mAmes, mAmes_rev = matrixFor_XY(amesPlane)
     amesPatternXY = patternMulMatrix3D(amesPattern, mAmes)
@@ -437,10 +430,11 @@ def makePicture(basePattern, basePlane, amesPlane):
                                         # у всех точек паттерна должна быть одинакова
 
     # используем ту же плотность пикселей, что и в базовой картинке
-    amesPixelCountX = (amesLenX * basePixelCountX) // baseLenX
-    amesPixelCountY = (amesLenY * basePixelCountY) // baseLenY
+    amesPixelCountX = floor((amesLenX * basePixelCountX) / baseLenX)
+    amesPixelCountY = floor((amesLenY * basePixelCountY) / baseLenY)
 
-    # TODO: создаем картинку Эймса размерностью (amesPixelCountX, amesPixelCountY)
+    # создаем картинку Эймса размерностью (amesPixelCountX, amesPixelCountY)
+    amesIm = Image.new(baseIm.mode, (amesPixelCountX, amesPixelCountY))
 
     # проходим по всем пикселям картинки Эймса
     amesPixelX = 0
@@ -463,15 +457,28 @@ def makePicture(basePattern, basePlane, amesPlane):
 
                 # возможно не попали внутрь базового узора:
                 if isPointInPattern_XY(basePointXY, basePatternXY):
-                    basePixelX = (basePointXY[0] - baseX) * basePixelCountX // baseLenX
-                    basePixelY = (basePointXY[1] - baseY) * basePixelCountY // baseLenY
+                    basePixelX = floor((basePointXY[0] - baseX) * basePixelCountX / baseLenX)
+                    basePixelY = floor((basePointXY[1] - baseY) * basePixelCountY / baseLenY)
 
                     # пишем пиксел (basePixelX, basePixelY) исходной картинки в пиксел (amesPixelX, amesPixelY) Эймса
-                    continue
+                    if (basePixelX < basePixelCountX) and (basePixelY < basePixelCountY):
+                        amesIm.putpixel((amesPixelX, amesPixelY), baseIm.getpixel((basePixelX, basePixelY)))
 
             # print empty pixel to (amesPixelX, amesPixelY)
 
             amesPixelY = amesPixelY + 1
         amesPixelX = amesPixelX + 1
+    
+    amesIm.save(amesPattern.picturePath, baseIm.format, dpi=baseIm.info["dpi"])
+
+
+# # Находим проекции узоров
+# amesFloorPatterns       = patternsProjection(floorPatterns, amesFloor)
+# amesCeilPatterns        = patternsProjection(ceilPatterns, amesCeil)
+# amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
+# amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
+# amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
+
+makePicture(frontWallPatterns[0],  Plane3D(B, C, G), amesFrontWall)
 
 print("Done. Use image files in the 'output' directory")
