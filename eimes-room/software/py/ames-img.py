@@ -1,6 +1,7 @@
-import os
-from math import floor, sqrt
-from PIL import Image
+# используем стандартные библиотеки:
+import os                       # для работы с именами файлов
+from math import floor, sqrt    # немного математики
+from PIL import Image           # легендарная библиотека pillow для обработки изображений
 
 # Это программа-генератор искаженных картинок на стенах, потолке и поле комнаты Эймса.
 # Она сделана на основе программы ames.py, расположенной в том же каталоге.
@@ -33,8 +34,6 @@ from PIL import Image
 # 3D точка: [x, y, z], 2D: [x, y].
 # Измерения: x - ширина (право-лево), y - высота (верх-низ), z - глубина (вблизи-вдали)
 # Измеряем всё в миллиметрах!
-
-# Программа не проверяет влезет ли выкройка на A4-й лист бумаги --- подгоняйте сами.
 
 # Точку зрения V поместим в начало координат: 
 
@@ -99,8 +98,8 @@ def generatePatternsRightWall():
 
 # дальняя стена
 def generatePatternsFrontWall():
-    # камин
-    patterns = [Pattern("input/pictures/camin-1.png", [B, C, G, F])] # TODO: пока на стену целиком
+    # камин (надо учесть)
+    patterns = [Pattern("input/pictures/camin-5.png", [B, C, G, F])] # TODO: пока на стену целиком
     return patterns
 
 # сохраняем узоры в соответствующих переменных:
@@ -407,15 +406,12 @@ def isPointInPattern_XY(point: list[float], pattern: Pattern):
 # Функция, которая картинку базового узора (basePattern) "натягивает" 
 # на его проекцию на заданную плоскость amesPlane.
 # Базовый узор  должен лежать в плоскости basePlane (не проверяем это!).
-def makePicture(basePattern: Pattern, basePlane, amesPlane):
+# brmXY, armXY --- матрицы ОТРАЖЕНИЯ чтобы контролировать результат
+def makePicture(basePattern: Pattern, brmXY, basePlane, armXY, amesPlane):
     amesPattern = patternProjection(basePattern, amesPlane)
 
     mBase,_ = matrixFor_XY(basePlane)
-    m = [   [ 1, 0, 0],
-            [ 0,-1, 0],
-            [ 0, 0, 1] ]
-    mBase = matrixMulMatrix3D(mBase, m)
-
+    mBase   = matrixMulMatrix3D(mBase, brmXY)
     basePatternXY = patternMulMatrix3D(basePattern, mBase)
     baseX, baseY, baseLenX, baseLenY = patternArea_XY(basePatternXY)
 
@@ -424,6 +420,7 @@ def makePicture(basePattern: Pattern, basePlane, amesPlane):
     (basePixelCountX, basePixelCountY) = baseIm.size
 
     mAmes, mAmes_rev = matrixFor_XY(amesPlane)
+    mAmes, mAmes_rev = matrixMulMatrix3D(mAmes, armXY), matrixMulMatrix3D(armXY, mAmes_rev)
     amesPatternXY = patternMulMatrix3D(amesPattern, mAmes)
     amesX, amesY, amesLenX, amesLenY = patternArea_XY(amesPatternXY)
     amesZ = amesPatternXY.points[0][2]  # z координата (с индексом 2 в массиве) 
@@ -478,7 +475,18 @@ def makePicture(basePattern: Pattern, basePlane, amesPlane):
 # amesLeftWallPatterns    = patternsProjection(leftWallPatterns, amesLeftWall)
 # amesRightWallPatterns   = patternsProjection(rightWallPatterns, amesRightWall)
 # amesFrontWallPatterns   = patternsProjection(frontWallPatterns, amesFrontWall)
+mxy = [ [-1, 0, 0],
+        [ 0,-1, 0],
+        [ 0, 0, 1] ]
 
-makePicture(frontWallPatterns[0],  Plane3D(B, C, G), amesFrontWall)
+mx = [  [-1, 0, 0],
+        [ 0, 1, 0],
+        [ 0, 0, 1] ]
+
+my = [  [ 1, 0, 0],
+        [ 0,-1, 0],
+        [ 0, 0, 1] ]
+
+makePicture(frontWallPatterns[0], mx, Plane3D(B, C, G), mxy, amesFrontWall)
 
 print("Done. Use image files in the 'output' directory")
