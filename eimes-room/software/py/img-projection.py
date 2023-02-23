@@ -1,70 +1,14 @@
-# используем стандартные библиотеки:
-import os                       # для работы с именами файлов
-from math import floor, sqrt    # немного математики
-from PIL import Image           # легендарная библиотека pillow для обработки изображений
+import os
+from math import floor, sqrt
+from PIL import Image
 
-# Это программа-генератор искаженных картинок на стенах, потолке и поле комнаты Эймса.
-# Она сделана на основе программы ames.py, расположенной в том же каталоге.
-
-# Обозначения элементов комнаты Эймса 
-# возьмем как на рисунке:
-# "../../../eimes-room/beamer/figs/ames-xyz.png" 
-# 
-# Обозначения углов комнаты:
-#   E = левый--нижний--ближний
-#   F = левый--нижний--дальний
-#   A = левый--верхний-ближний
-#   B = левый--верхний-дальний
-#   H = правый-нижний--ближний
-#   G = правый-нижний--дальний
-#   D = правый-верхний-ближний
-#   C = правый-верхний-дальний
-#
-# Т.е.:
-#   floor       - пол (EFGH);
-#   ceil        - потолок (ABCD);
-#   leftWall    - левая стена (EABF);
-#   frontWall   - передняя стена (FBCG);
-#   rightWall   - правая стена (GCDH);
-# 
-# Одноименные файлы выкроек вы получите на выходе.
+# Это программа-генератор искаженных в линейной перспективе картинок
 
 # Трехментые координаты будут представлены списком из трех чисел.
 # Двумерные (для выкроек стен, потолка и пола комнаты) --- списком из двух чисел.
 # 3D точка: [x, y, z], 2D: [x, y].
 # Измерения: x - ширина (право-лево), y - высота (верх-низ), z - глубина (вблизи-вдали)
-# Измеряем всё в миллиметрах!
-
-# Точку зрения V поместим в начало координат: 
-
-V = [0, 0, 0]
-
-# Плоскости потолка и пола параллельны плоскости xOz; 
-#  плоскости левой и правой стен параллельны yOz; 
-#  передняя стена параллельна xOy.
-
-# Чтобы задать положение комнаты в 3D, зададим координаты точки 
-
-E = [-100, -100, 0]
-
-# т.е. E --- это левый-нижний-ближний угол комнаты. А также измерения комнаты:
-
-WIDTH  = 200
-HEIGHT = 200
-DEPTH  = 200
-
-# Координаты остальных вершин комнаты получаются автоматически от базовой точки E:
-#         + WIDTH,       + HEIFHT,       +  DEPTH
-A = [E[0],          E[1] + HEIGHT,  E[2]]
-D = [E[0] + WIDTH,  E[1] + HEIGHT,  E[2]]
-H = [E[0] + WIDTH,  E[1],           E[2]]
-
-F = [E[0],          E[1],           E[2] + DEPTH]
-B = [E[0],          E[1] + HEIGHT,  E[2] + DEPTH]
-C = [E[0] + WIDTH,  E[1] + HEIGHT,  E[2] + DEPTH]
-G = [E[0] + WIDTH,  E[1],           E[2] + DEPTH]
-
-# Также не проверяется видимость всей комнаты из точки V (проверяйте сами)
+# Измеряем всё в чем попало, например в пикселях!
 
 # Элемент узора (на который будет "натягиваться" картинка) в этой программе 
 # представляет собой замкнутую фигуру из нескольких 2D или 3D точек (хранимых списком), 
@@ -77,37 +21,6 @@ class Pattern:
         self.picturePath = picturePath
         self.points = points
 
-
-# Определим несколько функций для генерации узоров комнаты:
-
-# пол
-def generatePatternsFloor(): 
-    return []
-
-# потолок
-def generatePatternsCeil():
-    return [] # todo: светильники можно сделать катринками
-
-# левая стена
-def generatePatternsLeftWall():
-    return [] # todo: двери, картины можно сделать картинками
-
-# правая стена
-def generatePatternsRightWall():
-    return [] # todo: двери, картины можно сделать картинками
-
-# дальняя стена
-def generatePatternsFrontWall():
-    # камин (надо учесть)
-    patterns = [Pattern("input/pictures/camin-5.png", [B, C, G, F])] # TODO: пока на стену целиком
-    return patterns
-
-# сохраняем узоры в соответствующих переменных:
-floorPatterns       = generatePatternsFloor()
-ceilPatterns        = generatePatternsCeil()
-leftWallPatterns    = generatePatternsLeftWall()
-rightWallPatterns   = generatePatternsRightWall()
-frontWallPatterns   = generatePatternsFrontWall()
 
 # функция получения вектора из двух точек
 def vector3D(a, b):
@@ -173,34 +86,6 @@ class Plane3D:
         return l.point(t)
 
 
-# Определим новые точки C и G (amesC, amesG), отодвинув их на луче зрения.
-# Напомним, что луч зрения исходит из точки V.
-# Масштаб искажения:
-SCALE = 2
-
-amesC = Line3D(V, C).point(SCALE)
-amesG = Line3D(V, G).point(SCALE)
-
-# По построению точки B,D,F,H остаются неизменными:
-amesB = B
-amesD = D
-amesF = F
-amesH = H
-
-# Теперь можно определить плоскости пола, потолка, правой и дальней стены
-# комнаты Эймса:
-amesFloor       = Plane3D(amesF, amesH, amesG)
-amesCeil        = Plane3D(amesB, amesD, amesC)
-amesRightWall   = Plane3D(amesD, amesH, amesC)
-amesFrontWall   = Plane3D(amesB, amesF, amesC)
-
-# Осталось найти плоскость левой стены. Луч зрения VA пересечет потолок 
-# в точке A', которая также принадлежит левой стене
-amesA = amesCeil.intersectionPointWithLine(Line3D(V,A))
-
-# Таким образом, плоскость левой стены тоже определена:
-amesLeftWall   = Plane3D(amesA, amesB, amesF)
-
 # Определим функцию, которая строит проекцию точки, на которую смотрят
 # из точки V на заданную плоскость:
 def viewProjectionPointOnPlane(point, plane:Plane3D):
@@ -210,7 +95,7 @@ def viewProjectionPointOnPlane(point, plane:Plane3D):
 def patternProjection(pattern: Pattern, plane:Plane3D):
     newPicturePath = os.path.join(
         "output/pictures", 
-        "ames_" + os.path.basename(pattern.picturePath))
+        "scale_" + os.path.basename(pattern.picturePath))
 
     points = []
     for point in pattern.points:
@@ -218,12 +103,6 @@ def patternProjection(pattern: Pattern, plane:Plane3D):
 
     return Pattern(newPicturePath, points)
 
-# Определим также функцию, которая проецирует целый массив узоров
-def patternsProjection(patterns:list[Pattern], plane:Plane3D):
-    projections = []
-    for pattern in patterns:
-        projections.append(patternProjection(pattern, plane))
-    return projections
 
 # Теперь проекции узоров нужно повернуть так, чтобы они "легли" например, на 
 # плоскость xOy (все узоры лежат в одной плоскости по определению). 
@@ -469,8 +348,31 @@ def makePicture(basePattern: Pattern, brmXY, basePlane, armXY, amesPlane):
     amesIm.save(amesPattern.picturePath, baseIm.format, dpi=baseIm.info["dpi"])
 
 
-mxy = [ [-1, 0, 0],
-        [ 0,-1, 0],
+# Точку зрения V поместим в начало координат: 
+V = [0, 0, 0]
+
+# расстояние глаза от картинки около полуметра (иначе глаз не ловит фокус)
+distance = 5*480
+
+# Зададим (прямоугольный) узор, содержащий картинку:
+pattern = Pattern(
+    "input/pictures/stitch.png",
+    [
+        [-160, -240, distance],
+        [-160,  240, distance],
+        [ 160,  240, distance],
+        [ 160, -240, distance],        
+    ])
+
+projectionPlane = Plane3D(
+    [-160, -240, distance],
+    [ 160, -240, distance],
+    [-160,  240, distance + 2*480],
+)
+
+# Находим проекцию узора
+e =   [ [ 1, 0, 0],
+        [ 0, 1, 0],
         [ 0, 0, 1] ]
 
 mx = [  [-1, 0, 0],
@@ -481,7 +383,15 @@ my = [  [ 1, 0, 0],
         [ 0,-1, 0],
         [ 0, 0, 1] ]
 
-# находим проекции картинок:
-makePicture(frontWallPatterns[0], mx, Plane3D(B, C, G), mxy, amesFrontWall)
+mxy = [ [-1, 0, 0],
+        [ 0,-1, 0],
+        [ 0, 0, 1] ]
+
+makePicture(
+    pattern, 
+    my, 
+    Plane3D(pattern.points[0], pattern.points[1], pattern.points[2]), 
+    mxy, 
+    projectionPlane)
 
 print("Done. Use image files in the 'output' directory")
