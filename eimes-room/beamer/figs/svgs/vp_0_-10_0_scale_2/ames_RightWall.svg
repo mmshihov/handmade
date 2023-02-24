@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg version="1.1"
+     width="82.46mm" 
+     height="80.00mm"
+     viewBox="-87.31 -50.00 82.46 80.00"
+     preserveAspectRatio="none"
+     xmlns="http://www.w3.org/2000/svg">
+
+<polygon points="-4.85,20.00 -4.85,-20.00 -87.31,-50.00 -87.31,30.00" fill="white"/>
+<polygon points="-4.85,20.00 -4.85,5.00 -87.31,0.00 -87.31,30.00" fill="green"/>
+<polygon points="-67.91,27.65 -40.19,24.29 -40.19,-21.43 -67.91,-28.82" fill="grey"/>
+<polygon points="-27.94,3.60 -37.12,3.04 -37.12,-10.87 -27.94,-9.20" fill="blue"/>
+<polygon points="-7.51,11.03 -7.51,8.97 -4.85,10.00" fill="lawngreen"/>
+<polyline points="-4.85,20.00 -4.85,-20.00 -87.31,-50.00 -87.31,30.00 -4.85,20.00" stroke="black" stroke-width="1px" stroke-opacity="0.3" fill="none"/></svg>
