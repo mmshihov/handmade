@@ -196,7 +196,7 @@ def generatePatternsCeil():
     return patterns
 
 # На всех стенах есть фартук:
-BORDER_HEIGHT = HEIGHT / 2
+BORDER_HEIGHT = HEIGHT * 3 / 8
 BORDER_COLOR  = "green"
 
 # левая стена с дверью
@@ -247,7 +247,7 @@ def generatePatternsRightWall():
     DOOR_COLOR = "grey"
 
     PICTURE_HEIGHT = HEIGHT / 4
-    PICTURE_WIDTH  = DEPTH / 4
+    PICTURE_WIDTH  = DEPTH / 8
     PICTURE_COLOR = "blue"
     
     patterns = [Pattern("white", [H, D, C, G])] # стена целиком
@@ -681,16 +681,16 @@ def mirrorOy(patterns: list[Pattern]):
 
 # Сохраняем узоры в SVG (ищите файлы в папке "output", там же, где лежит скрипт).
 # Часть узоров делаем в отражении (научный тык).
-savePatternsToSvg('output/ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
-savePatternsToSvg('output/ames_Ceil',      ames2D_xOy_CeilPatterns)
-savePatternsToSvg('output/ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
-savePatternsToSvg('output/ames_RightWall', ames2D_xOy_RightWallPatterns)
-savePatternsToSvg('output/ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
+savePatternsToSvg('output/svgs/ames_Floor',     mirrorOx(ames2D_xOy_FloorPatterns))
+savePatternsToSvg('output/svgs/ames_Ceil',      ames2D_xOy_CeilPatterns)
+savePatternsToSvg('output/svgs/ames_LeftWall',  ames2D_xOy_LeftWallPatterns)
+savePatternsToSvg('output/svgs/ames_RightWall', ames2D_xOy_RightWallPatterns)
+savePatternsToSvg('output/svgs/ames_FrontWall', mirrorOy(ames2D_xOy_FrontWallPatterns))
 
-savePatternsToSvg('output/base_Floor',     room2D_xOy_FloorPatterns)
-savePatternsToSvg('output/base_Ceil',      room2D_xOy_CeilPatterns)
-savePatternsToSvg('output/base_LeftWall',  room2D_xOy_LeftWallPatterns)
-savePatternsToSvg('output/base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
-savePatternsToSvg('output/base_FrontWall', room2D_xOy_FrontWallPatterns)
+savePatternsToSvg('output/svgs/base_Floor',     room2D_xOy_FloorPatterns)
+savePatternsToSvg('output/svgs/base_Ceil',      room2D_xOy_CeilPatterns)
+savePatternsToSvg('output/svgs/base_LeftWall',  room2D_xOy_LeftWallPatterns)
+savePatternsToSvg('output/svgs/base_RightWall', mirrorOx(room2D_xOy_RightWallPatterns))
+savePatternsToSvg('output/svgs/base_FrontWall', room2D_xOy_FrontWallPatterns)
 
-print("Done. Use *.svg files in the script directory")
+print("Done. Use *.svg files in the 'output/svgs/*' directory")

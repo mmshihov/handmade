@@ -468,6 +468,12 @@ def makePicture(basePattern: Pattern, brmXY, basePlane, armXY, amesPlane):
     
     amesIm.save(amesPattern.picturePath, baseIm.format, dpi=baseIm.info["dpi"])
 
+# это всякие матрицы отражения (и единичная)
+# она передаются в функцию makePicture, чтобы 
+# добиться вменяемого результата
+e =   [ [ 1, 0, 0],
+        [ 0, 1, 0],
+        [ 0, 0, 1] ]
 
 mxy = [ [-1, 0, 0],
         [ 0,-1, 0],
